@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title> Project </title>
+<script type="text/javascript">
+	function findBox() 
+	{
+	  var table = document.getElementById('table1');
+	  var cells = table.getElementsByTagName('td');
+	  var f = new Array();
+	  for (var i = 0; i < table.rows.length; i++) 	  	
+	  	    for (var j = 0; j < table.rows[i].cells.length; j++)
+	  	    {
+	  	    	 table.rows[i].cells[j].onclick = function() //.innerHTML= '<p id="size">x</p>';
+	  	    	 { placeX(this);} ;
+	  	    	
+	  	    }
+	  	}
+	function placeX(x) {
+        x.innerHTML = '<p id="size">x</p>';
+    }
+
+</script>
+<style>
+#size
+{
+	font-size: 72pt;
+	text-align: center;
+}
+table td{
+	border: 2px solid black;
+}
+
+table
+{
+	border-collapse: collapse;
+	border-style: hidden;
+}
+.myTableStyle
+        {
+           position:relative;
+        }
+td:hover {
+  background-color: #ffffcc;
+}
+</style>
+</head>
+<body>
+	<table class="myTableStyle" id="table1">
+    <tr>
+        <td width="800px" height="300px" onclick="findBox()"></td>
+       <td width="33%" onclick="findBox()"></td>
+       <td width="33%" onclick="findBox()"></td>       
+    </tr>
+     <tr>
+        <td width="800px" height="300px" onclick="findBox()"></td>
+       <td width="33%" onclick="findBox()"></td>
+       <td width="33%" onclick="findBox()"></td>       
+    </tr>
+    <tr>
+        <td width="800px" height="300px" onclick="findBox()"></td>
+       <td width="33%" onclick="findBox()"></td>
+       <td width="33%"onclick="findBox()"></td>       
+    </tr>
+</table>
+</body>
+</html>
