@@ -5,24 +5,103 @@
 <link href="grid12.css" rel="stylesheet">
 <title> Project </title>
 <script type="text/javascript">
-	function findBox() //what does this function do?
-	{
-	  var table = document.getElementById('table1');
-	  var cells = table.getElementsByTagName('td');
-	  var f = new Array();
-	  for (var i = 0; i < table.rows.length; i++) 	  	
-	    for (var j = 0; j < table.rows[i].cells.length; j++)
-	    {
-    	  table.rows[i].cells[j].onclick = function() //.innerHTML= '<p id="size">x</p>';
-    	  { placeX(this);} ;
-	    }
-	 }
-	function placeX(element) {//I thought this function alone serves the purpose?
-    element.innerHTML = '<p class="X">X</p>';
+
+  var numGrid = 3;
+
+  var gameOver = false;
+
+  var winner;
+
+  //a 2D array of cells (elements)
+  var board = new Array(numGrid);
+  for(var i=0; i<numGrid; i++)
+    board[i] = new Array(numGrid);
+
+  var XOs = new Array(numGrid);
+  for(var i=0; i<numGrid; i++)
+    XOs[i] = new Array(numGrid);
+
+  /*
+  Evenly divides #container into numGrid rows and numGrid columns of cells
+  And store them into board for later access
+  */
+	function generateCells()
+  {
+    var container = document.getElementById('container');
+    var proportion = 100/numGrid;//percentage of width or height per cell
+
+    for(var i=0; i<numGrid; i++) {
+      //create and add row
+      var row = document.createElement('div');
+      row.style.height = proportion + '%';
+      row.className = 'row';
+      container.appendChild(row);
+      for(var j=0; j<numGrid; j++) {
+        //create and add cell
+        var cell = document.createElement('div');
+        cell.className='cell';
+        cell.style.position = 'relative';
+        cell.style.float = 'left';
+        cell.style.width = proportion + '%';
+        cell.setAttribute('onClick','placeX(this)');//just for testing. this line will be removed later.
+        row.appendChild(cell);
+        //add this cell to board (2D array)
+        board[i][j] = cell;
+      }
+    }
+  }
+
+	function placeX(element) {
+    if(!gameOver) {
+      element.className = 'cell X';
+      element.style.lineHeight = container.clientHeight/numGrid + 'px';
+      element.innerHTML = 'X';
+      winner = detectWin();
+    }
   }
 
   function placeO(element) {
-    element.innerHTML = '<p class="O">O</p>';
+    if(!gameOver) {
+      element.className = 'cell O';
+      element.style.lineHeight = container.clientHeight/numGrid + 'px';
+      element.innerHTML = 'O';
+      winner = detectWin();
+    }
+  }
+
+  /*
+  set winner to X and return 'X' if X wins, or set winner to O and return 'O' if O wins. 
+  Doesn't change or return anything if nobody wins after this round.
+  */
+  function detectWin() {
+    var Xhori = 0; var Ohori = 0;
+    var Xvert = 0; var Overt = 0;
+    var Xdiag1 = 0; var Odiag1 = 0;
+    var Xdiag2 = 0; var Odiag2 = 0;
+    for(var i=0; i<numGrid; i++) {
+      //diagonals
+      if(board[i][i].innerHTML == 'X') Xdiag1++;
+      else if(board[i][i].innerHTML == 'O')Odiag1++;
+      if(board[i][numGrid-1-i].innerHTML == 'X') Xdiag2++;
+      else if(board[i][numGrid-i-1].innerHTML == 'O')Odiag2++;
+
+      for (var j=0; j<numGrid; j++) {
+        //horizontal
+        if(board[i][j].innerHTML == 'X') Xhori++;
+        else if(board[i][j].innerHTML == 'O')Ohori++;
+        //vertical
+        if(board[j][i].innerHTML == 'X') Xvert++;
+        else if(board[j][i].innerHTML == 'O')Overt++;
+      }
+      //any horizantal or vertical win, after running this inner loop?
+      if(Xhori == numGrid || Xvert == numGrid) {gameOver = true; return 'X';}
+      else if(Ohori == numGrid || Overt == numGrid) {gameOver = true; return 'O';}
+      //reset horizontal and vertical count variables
+      else {Xhori = 0; Ohori = 0; Xvert = 0; Overt = 0;}
+    }
+    //any diagonal win, after completing the outer loop?
+    if(Xdiag1 == numGrid || Xdiag2 == numGrid) {gameOver = true; return 'X';}
+    else if(Odiag1 == numGrid || Odiag2 == numGrid) {gameOver = true; return 'O';}
   }
 
 </script>
@@ -30,33 +109,6 @@
   *{
     margin:0;
     padding:0;
-  }
-  /*
-  #size
-  {
-  	font-size: 72pt;
-  	text-align: center;
-  }
-  table td{
-  	border: 2px solid black;
-  }
-
-  table
-  {
-  	border-collapse: collapse;
-  	border-style: hidden;
-  }
-  .myTableStyle
-  {
-     position:relative;
-  }
-  td:hover {
-    background-color: #ffffcc;
-  }
-  */
-
-  .row{
-    height:250px;
   }
 
   div.cell{
@@ -73,58 +125,23 @@
     width:100%;
     height:100%;
     font-size:72px;
-    color:green;
     text-align:center;
-    line-height:250px;
     vertical-align:middle;
   }
-
+  #container{
+    width:800px;
+    height:600px;
+  }
+  #title{
+    text-align:center;
+  }
 
 </style>
 </head>
-<body>
-  <!--
-  This layout is based on grid12.css, which is a modified version of bootstrap (a layout tool).
-  You can find a documentation at http://getbootstrap.com/css/#grid-options
-  These divs behave more predictably so I think it's a better tool for layouts than tables.
-  Changing the table cell content can affect its size, but contents of divs don't change its size.
-  -->
-  <div class="container-fluid box">
-    <div class="row">
-      <div class="col-xs-4 cell" onclick="placeX(this)">1</div>
-      <div class="col-xs-4 cell" onclick="placeX(this)">2</div>
-      <div class="col-xs-4 cell" onclick="placeX(this)">3</div>
-    </div>
-    <div class="row">
-      <div class="col-xs-4 cell" onclick="placeX(this)">4</div>
-      <div class="col-xs-4 cell" onclick="placeX(this)">5</div>
-      <div class="col-xs-4 cell" onclick="placeX(this)">6</div>
-    </div>
-    <div class="row">
-      <div class="col-xs-4 cell" onclick="placeX(this)">7</div>
-      <div class="col-xs-4 cell" onclick="placeX(this)">8</div>
-      <div class="col-xs-4 cell" onclick="placeX(this)">9</div>
-    </div>
+<body onload="generateCells()">
+  <div class="container">
+    <h3 id="title">A placeholder title</h3>
+    <div id="container" class="container-fluid"></div>
   </div>
-
-<!--
-  	<table class="myTableStyle" id="table1">
-      <tr>
-          <td width="800px" height="300px" onclick="findBox()"></td>
-         <td width="33%" onclick="findBox()"></td>
-         <td width="33%" onclick="findBox()"></td>       
-      </tr>
-       <tr>
-          <td width="800px" height="300px" onclick="findBox()"></td>
-         <td width="33%" onclick="findBox()"></td>
-         <td width="33%" onclick="findBox()"></td>       
-      </tr>
-      <tr>
-          <td width="800px" height="300px" onclick="findBox()"></td>
-         <td width="33%" onclick="findBox()"></td>
-         <td width="33%"onclick="findBox()"></td>       
-      </tr>
-  </table>
-  -->
 </body>
 </html>
