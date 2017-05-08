@@ -8,15 +8,56 @@
 
   var numGrid = 3;
 
-  var gameOver = false;
-
-  var winner;
-
   //a 2D array of cells (elements)
   var board = new Array(numGrid);
   for(var i=0; i<numGrid; i++)
     board[i] = new Array(numGrid);
+
+  var gameOver = false;
+  var winner;
+
+  var player1 = new User();
+  var player2 = new Computer();
+  player1.opponent = player2;
+  player2.opponent = player1;
+
+  var currentPlayer = player1;
+
+  //start!
+  function startGame() {
+    currentPlayer.move();
+  }
+
   
+  function User() {
+    this.opponent;
+    this.move = function() {
+      for(var i=0; i<numGrid; i++) {
+        for(var j=0; j<numGrid; j++) {
+          board[i][j].setAttribute('onClick','placeLetter(this)');
+        }
+      }
+    }
+  }
+
+  function Computer() {
+    this.opponent;
+    this.move = function() {
+      while(!gameOver) {
+        var r = Math.floor(Math.random()*numGrid);
+        var c = Math.floor(Math.random()*numGrid);
+        if(board[r][c].innerHTML == '') {
+          placeLetter(board[r][c]);
+          /*
+          setTimeout(function(){
+            placeLetter(board[r][c]);
+          },1000);*/
+          break;
+        }
+      }
+    }
+  }
+
   /*
   Evenly divides #container into numGrid rows and numGrid columns of cells
   And store them into board for later access
@@ -39,7 +80,6 @@
         cell.style.position = 'relative';
         cell.style.float = 'left';
         cell.style.width = proportion + '%';
-        cell.setAttribute('onClick','placeX(this)');//just for testing. this line will be removed later.
         row.appendChild(cell);
         //add this cell to board (2D array)
         board[i][j] = cell;
@@ -47,29 +87,37 @@
     }
   }
 
-	function placeX(element) {
-    if(!gameOver) {
-      element.className = 'cell X';
-      element.style.lineHeight = container.clientHeight/numGrid + 'px';
-      element.innerHTML = 'X';
+  function placeLetter(element) {
+    if(!gameOver){
+      if(element.innerHTML != '') {
+        //Clicked on a grid where there's already a letter. Doesn't do anything.
+        return;
+      }
+      if(currentPlayer == player1) {
+        //It's user's turn, place an X.
+        element.className = 'cell X';
+        element.style.lineHeight = container.clientHeight/numGrid + 'px';
+        element.innerHTML = 'X';
+      } else {
+        //It's computer's turn, place an O.
+        element.className = 'cell O';
+        element.style.lineHeight = container.clientHeight/numGrid + 'px';
+        element.innerHTML = 'O';
+      }
       winner = detectWin();
-    }
-  }
-
-  function placeO(element) {
-    if(!gameOver) {
-      element.className = 'cell O';
-      element.style.lineHeight = container.clientHeight/numGrid + 'px';
-      element.innerHTML = 'O';
-      winner = detectWin();
+      if(gameOver) console.log('Winner: ' + winner);
+      currentPlayer = currentPlayer.opponent;
+      currentPlayer.move();
     }
   }
 
   /*
-  set winner to X and return 'X' if X wins, or set winner to O and return 'O' if O wins. 
-  Doesn't change or return anything if nobody wins after this round.
+  return 'X' if X wins, or return 'O' if O wins. 
+  return 'tie' if the whole board is filled but nobody wins.
+  Otherwise doesn't change or return anything.
   */
   function detectWin() {
+    var letterCount = 0;
     var Xhori = 0; var Ohori = 0;
     var Xvert = 0; var Overt = 0;
     var Xdiag1 = 0; var Odiag1 = 0;
@@ -82,9 +130,13 @@
       else if(board[i][numGrid-i-1].innerHTML == 'O')Odiag2++;
 
       for (var j=0; j<numGrid; j++) {
-        //horizontal
-        if(board[i][j].innerHTML == 'X') Xhori++;
-        else if(board[i][j].innerHTML == 'O')Ohori++;
+        if(board[i][j].innerHTML != '') {
+          //count towards checking if the whole board is filled.
+          letterCount++;
+          //horizontal
+          if(board[i][j].innerHTML == 'X') Xhori++;
+          else if(board[i][j].innerHTML == 'O')Ohori++;
+        }
         //vertical
         if(board[j][i].innerHTML == 'X') Xvert++;
         else if(board[j][i].innerHTML == 'O')Overt++;
@@ -98,6 +150,8 @@
     //any diagonal win, after completing the outer loop?
     if(Xdiag1 == numGrid || Xdiag2 == numGrid) {gameOver = true; return 'X';}
     else if(Odiag1 == numGrid || Odiag2 == numGrid) {gameOver = true; return 'O';}
+    //is the whole board filled?
+    else if(letterCount == numGrid**2) {gameOver = true; return 'tie';}
   }
 
 </script>
@@ -134,7 +188,7 @@
 
 </style>
 </head>
-<body onload="generateCells()">
+<body onload="generateCells(); startGame();">
   <div class="container">
     <h3 id="title">A placeholder title</h3>
     <div id="container" class="container-fluid"></div>
