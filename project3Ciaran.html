@@ -6,7 +6,7 @@
 <title> Project </title>
 <script type="text/javascript">
 
-  var numGrid = 4;
+  var numGrid = 3;
 
   //a 2D array of cells (elements)
   var board = new Array(numGrid);
@@ -17,7 +17,7 @@
   var winner;
 
   var player1 = new User();
-  var player2 = new Computer(rushWinning);
+  var player2 = new Computer(notSoRandom);
   player1.opponent = player2;
   player2.opponent = player1;
 
@@ -25,10 +25,13 @@
 
   //start!
   function startGame() {
+    currentPlayer.letter = 'X';
+    currentPlayer.opponent.letter = 'O';
     currentPlayer.move();
   }
   
   function User() {
+    this.letter;
     this.opponent;
     this.move = function() {
       //get ready for user's move by making grids clickable and wait for user's click
@@ -40,6 +43,7 @@
   }
 
   function Computer(algorithm) {
+    this.letter;
     this.opponent;
     this.move = function() {
       //make grids unclickable. 
@@ -79,10 +83,10 @@
     for(var i=0; i<numGrid; i++) 
     {
       //count diagonal Xs and Os
-      if(board[i][i].innerHTML == 'X') Xdiag1++;
-      else if(board[i][i].innerHTML == 'O')Odiag1++;
-      if(board[i][numGrid-1-i].innerHTML == 'X') Xdiag2++;
-      else if(board[i][numGrid-i-1].innerHTML == 'O')Odiag2++;
+      if(board[i][i].innerHTML == currentPlayer.letter) Xdiag1++;
+      else if(board[i][i].innerHTML == currentPlayer.opponent.letter) Odiag1++;
+      if(board[i][numGrid-1-i].innerHTML == currentPlayer.letter) Xdiag2++;
+      else if(board[i][numGrid-i-1].innerHTML == currentPlayer.opponent.letter)Odiag2++;
 
       //Last loop, should've counted all XOdiags. any diagonal almost-win/lose?
       if(i==numGrid-1 && (Xdiag1 == numGrid-1 || Odiag1 == numGrid-1) && AIhelper('diag1') != false) 
@@ -94,11 +98,11 @@
       else {
         for (var j=0; j<numGrid; j++) {
           //horizontal
-          if(board[i][j].innerHTML == 'X') Xhori++;
-          else if(board[i][j].innerHTML == 'O')Ohori++;
+          if(board[i][j].innerHTML == currentPlayer.letter) Xhori++;
+          else if(board[i][j].innerHTML == currentPlayer.opponent.letter)Ohori++;
           //vertical
-          if(board[j][i].innerHTML == 'X') Xvert++;
-          else if(board[j][i].innerHTML == 'O') Overt++;
+          if(board[j][i].innerHTML == currentPlayer.letter) Xvert++;
+          else if(board[j][i].innerHTML == currentPlayer.opponent.letter) Overt++;
           
           //Last inner loop. Check for vertical almost-win/lose.
           if(j==numGrid-1 && (Xvert == numGrid-1 || Overt == numGrid-1) && AIhelper('vert',i) != false)
@@ -130,10 +134,10 @@
     for(var i=0; i<numGrid; i++) 
     {
       //count diagonal Xs and Os
-      if(board[i][i].innerHTML == 'X') Xdiag1++;
-      else if(board[i][i].innerHTML == 'O')Odiag1++;
-      if(board[i][numGrid-1-i].innerHTML == 'X') Xdiag2++;
-      else if(board[i][numGrid-i-1].innerHTML == 'O')Odiag2++;
+      if(board[i][i].innerHTML == currentPlayer.letter) Xdiag1++;
+      else if(board[i][i].innerHTML == currentPlayer.opponent.letter)Odiag1++;
+      if(board[i][numGrid-1-i].innerHTML == currentPlayer.letter) Xdiag2++;
+      else if(board[i][numGrid-i-1].innerHTML == currentPlayer.opponent.letter)Odiag2++;
 
       //Last loop, should've counted all XOdiags. any diagonal almost-win?
       if(i==numGrid-1 && Odiag1 == numGrid-1 && AIhelper('diag1') != false) 
@@ -145,11 +149,11 @@
       else {
         for (var j=0; j<numGrid; j++) {
           //horizontal
-          if(board[i][j].innerHTML == 'X') Xhori++;
-          else if(board[i][j].innerHTML == 'O')Ohori++;
+          if(board[i][j].innerHTML == currentPlayer.letter) Xhori++;
+          else if(board[i][j].innerHTML == currentPlayer.opponent.letter)Ohori++;
           //vertical
-          if(board[j][i].innerHTML == 'X') Xvert++;
-          else if(board[j][i].innerHTML == 'O') Overt++;
+          if(board[j][i].innerHTML == currentPlayer.letter) Xvert++;
+          else if(board[j][i].innerHTML == currentPlayer.opponent.letter) Overt++;
           
           //Last inner loop. Check for vertical almost-win.
           if(j==numGrid-1 && Overt == numGrid-1 && AIhelper('vert',i) != false)
@@ -172,10 +176,10 @@
     for(var i=0; i<numGrid; i++) 
     {
       //count diagonal Xs and Os
-      if(board[i][i].innerHTML == 'X') Xdiag1++;
-      else if(board[i][i].innerHTML == 'O')Odiag1++;
-      if(board[i][numGrid-1-i].innerHTML == 'X') Xdiag2++;
-      else if(board[i][numGrid-i-1].innerHTML == 'O')Odiag2++;
+      if(board[i][i].innerHTML == currentPlayer.letter) Xdiag1++;
+      else if(board[i][i].innerHTML == currentPlayer.opponent.letter)Odiag1++;
+      if(board[i][numGrid-1-i].innerHTML == currentPlayer.letter) Xdiag2++;
+      else if(board[i][numGrid-i-1].innerHTML == currentPlayer.opponent.letter)Odiag2++;
 
       //Last loop, should've counted all XOdiags. any diagonal almost-win?
       if(i==numGrid-1 && Xdiag1 == numGrid-1 && AIhelper('diag1') != false) 
@@ -187,11 +191,11 @@
       else {
         for (var j=0; j<numGrid; j++) {
           //horizontal
-          if(board[i][j].innerHTML == 'X') Xhori++;
-          else if(board[i][j].innerHTML == 'O')Ohori++;
+          if(board[i][j].innerHTML == currentPlayer.letter) Xhori++;
+          else if(board[i][j].innerHTML == currentPlayer.opponent.letter)Ohori++;
           //vertical
-          if(board[j][i].innerHTML == 'X') Xvert++;
-          else if(board[j][i].innerHTML == 'O') Overt++;
+          if(board[j][i].innerHTML == currentPlayer.letter) Xvert++;
+          else if(board[j][i].innerHTML == currentPlayer.opponent.letter) Overt++;
           
           //Last inner loop. Check for vertical almost-win.
           if(j==numGrid-1 && Xvert == numGrid-1 && AIhelper('vert',i) != false)
@@ -204,6 +208,102 @@
         Xhori = 0; Ohori = 0; Xvert = 0; Overt = 0;
       }
     }
+    return randomCoord();
+  }
+
+  function thinker() 
+  {
+    var Xhori=0; var Ohori=0;
+    var Xvert=0; var Overt=0;
+    var Xdiag1=0; var Odiag1=0;
+    var Xdiag2=0; var Odiag2=0;
+
+    //first time looping: win if it can
+    for(var i=0; i<numGrid; i++) 
+    {
+      //count diagonal Xs and Os
+      if(board[i][i].innerHTML == currentPlayer.letter) Xdiag1++;
+      else if(board[i][i].innerHTML == currentPlayer.opponent.letter)Odiag1++;
+      if(board[i][numGrid-1-i].innerHTML == currentPlayer.letter) Xdiag2++;
+      else if(board[i][numGrid-i-1].innerHTML == currentPlayer.opponent.letter)Odiag2++;
+
+      //Last loop, should've counted all XOdiags. any diagonal almost-win?
+      if(i==numGrid-1 && Odiag1 == numGrid-1 && AIhelper('diag1') != false) 
+        return AIhelper('diag1');
+      else if(i==numGrid-1 && Odiag2 == numGrid-1 && AIhelper('diag2') != false) 
+        return AIhelper('diag2');
+
+      //no? check for horizontals and verticals.
+      else {
+        for (var j=0; j<numGrid; j++) {
+          //horizontal
+          if(board[i][j].innerHTML == currentPlayer.letter) Xhori++;
+          else if(board[i][j].innerHTML == currentPlayer.opponent.letter)Ohori++;
+          //vertical
+          if(board[j][i].innerHTML == currentPlayer.letter) Xvert++;
+          else if(board[j][i].innerHTML == currentPlayer.opponent.letter) Overt++;
+          
+          //Last inner loop. Check for vertical almost-win.
+          if(j==numGrid-1 && Overt == numGrid-1 && AIhelper('vert',i) != false)
+            return AIhelper('vert',i);
+        }
+        //check for horizontal almost-win.
+        if(Ohori == numGrid-1 && AIhelper('hori',i) != false)
+          return AIhelper('hori',i);
+        //reset horizontal and vertical count variables
+        Xhori = 0; Ohori = 0; Xvert = 0; Overt = 0;
+      }
+    }
+
+    //reset all count variables
+    Xhori=0; Ohori=0;
+    Xvert=0; Overt=0;
+    Xdiag1=0; Odiag1=0;
+    Xdiag2=0; Odiag2=0;
+    //second time looping- if it's only one step from losing, make sure that doesn't happen.
+    for(var i=0; i<numGrid; i++) 
+    {
+      //count diagonal Xs and Os
+      if(board[i][i].innerHTML == currentPlayer.letter) Xdiag1++;
+      else if(board[i][i].innerHTML == currentPlayer.opponent.letter)Odiag1++;
+      if(board[i][numGrid-1-i].innerHTML == currentPlayer.letter) Xdiag2++;
+      else if(board[i][numGrid-i-1].innerHTML == currentPlayer.opponent.letter)Odiag2++;
+
+      //Last loop, should've counted all XOdiags. any diagonal almost-win?
+      if(i==numGrid-1 && Xdiag1 == numGrid-1 && AIhelper('diag1') != false) 
+        return AIhelper('diag1');
+      else if(i==numGrid-1 && Xdiag2 == numGrid-1 && AIhelper('diag2') != false) 
+        return AIhelper('diag2');
+
+      //no? check for horizontals and verticals.
+      else {
+        for (var j=0; j<numGrid; j++) {
+          //horizontal
+          if(board[i][j].innerHTML == currentPlayer.letter) Xhori++;
+          else if(board[i][j].innerHTML == currentPlayer.opponent.letter)Ohori++;
+          //vertical
+          if(board[j][i].innerHTML == currentPlayer.letter) Xvert++;
+          else if(board[j][i].innerHTML == currentPlayer.opponent.letter) Overt++;
+          
+          //Last inner loop. Check for vertical almost-win.
+          if(j==numGrid-1 && Xvert == numGrid-1 && AIhelper('vert',i) != false)
+            return AIhelper('vert',i);
+        }
+        //check for horizontal almost-win.
+        if(Xhori == numGrid-1 && AIhelper('hori',i) != false)
+          return AIhelper('hori',i);
+        //reset horizontal and vertical count variables
+        Xhori = 0; Ohori = 0; Xvert = 0; Overt = 0;
+      }
+    }
+
+
+
+
+
+
+
+
     return randomCoord();
   }
 
@@ -265,38 +365,25 @@
   }
 
   function placeLetter(element) {
-    if(!gameOver){
-      //It's user's turn, place an X.
-      if(currentPlayer == player1) {
-        if(element.innerHTML != '') {
-          //User clicked on a grid where there's already a letter. Doesn't do anything.
-          return;
-        }
-        element.className = 'cell X';
-        element.style.lineHeight = container.clientHeight/numGrid + 'px';
-        element.innerHTML = 'X';
-      } else {
-        //It's computer's turn, place an O.
-        element.className = 'cell O';
-        element.style.lineHeight = container.clientHeight/numGrid + 'px';
-        element.innerHTML = 'O';
-      }
+    if(gameOver || element.innerHTML != '') return;
+    element.className = 'cell ' + currentPlayer.letter;
+    element.style.lineHeight = container.clientHeight/numGrid + 'px';
+    element.innerHTML = currentPlayer.letter;
 
-      winner = detectWin();
-      if(gameOver) {
-        //end the game
-        console.log('Winner: ' + winner);
-        //make grids unclickable. 
-        for(var i=0; i<numGrid; i++) {
-          for(var j=0; j<numGrid; j++) {
-            board[i][j].setAttribute('onClick','');
-          }
+    winner = detectWin();
+    if(gameOver) {
+      //end the game
+      console.log('Winner: ' + winner);
+      //make grids unclickable. 
+      for(var i=0; i<numGrid; i++) {
+        for(var j=0; j<numGrid; j++) {
+          board[i][j].setAttribute('onClick','');
         }
-      } else {
-        //change player
-        currentPlayer = currentPlayer.opponent;
-        currentPlayer.move();
       }
+    } else {
+      //change player
+      currentPlayer = currentPlayer.opponent;
+      currentPlayer.move();
     }
   }
 
