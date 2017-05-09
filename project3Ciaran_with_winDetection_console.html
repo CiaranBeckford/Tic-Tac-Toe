@@ -3,11 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <link href="grid12.css" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css?family=Architects+Daughter" rel="stylesheet">
 <title> Project </title>
 <script type="text/javascript">
 
-  var numGrid = 3;
+  var numGrid = 4;
 
   //a 2D array of cells (elements)
   var board = new Array(numGrid);
@@ -31,19 +30,16 @@
   player1.opponent = player2;
   player2.opponent = player1;
 
-  var startingPlayer = player1;
-  var currentPlayer;
+  var currentPlayer = player1;
 
   //start!
   function startGame() {
-    currentPlayer = startingPlayer;
-    currentPlayer.letter = 'a';
-    currentPlayer.opponent.letter = 'b';
+    currentPlayer.letter = 'X';
+    currentPlayer.opponent.letter = 'O';
     currentPlayer.move();
   }
   
   function User() {
-    this.name = 'User';
     this.letter;
     this.opponent;
     this.move = function() {
@@ -56,7 +52,6 @@
   }
 
   function Computer(algorithm) {
-    this.name = 'AI';
     this.letter;
     this.opponent;
     this.move = function() {
@@ -386,24 +381,14 @@
 
   function placeLetter(element) {
     if(gameOver || element.innerHTML != '') return;
-    if(currentPlayer == startingPlayer)
-      element.classList.add('X');
-    else
-      element.classList.add('O');
+    element.classList.add(currentPlayer.letter);
     element.style.lineHeight = container.clientHeight/numGrid + 'px';
     element.innerHTML = currentPlayer.letter;
 
     winner = detectWin();
     if(gameOver) {
       //end the game
-      var msg = document.getElementById('winner-message')
-      if(winner == 'draw')
-        msg.innerHTML = 'Draw!'
-      else if(winner == player1)
-        msg.innerHTML = player1.name + ' ' + msg.innerHTML;
-      else
-        msg.innerHTML = player2.name + ' ' + msg.innerHTML;
-      msg.hidden = false;
+      console.log('Winner: ' + winner);
       //make grids unclickable. 
       for(var i=0; i<numGrid; i++) {
         for(var j=0; j<numGrid; j++) {
@@ -425,6 +410,7 @@
   var deadCount = 0;
   function detectWin() 
   {
+    console.log('----win detection----');
     deadCount = 0;//if a straight line contains both X and O, it's dead. No possible win there.
     var Xhori = 0; var Ohori = 0;
     var Xvert = 0; var Overt = 0;
@@ -433,37 +419,37 @@
     for(var i=0; i<numGrid; i++) 
     {
       //count diagonal 1 every loop
-      if(board[i][i].innerHTML == currentPlayer.letter) Xdiag1++;
-      else if(board[i][i].innerHTML == currentPlayer.opponent.letter)Odiag1++;
+      if(board[i][i].innerHTML == 'X') Xdiag1++;
+      else if(board[i][i].innerHTML == 'O')Odiag1++;
       //count diagonal 2 every loop
-      if(board[i][numGrid-1-i].innerHTML == currentPlayer.letter) Xdiag2++;
-      else if(board[i][numGrid-i-1].innerHTML == currentPlayer.opponent.letter)Odiag2++;
+      if(board[i][numGrid-1-i].innerHTML == 'X') Xdiag2++;
+      else if(board[i][numGrid-i-1].innerHTML == 'O')Odiag2++;
       if(i == numGrid-1)//last outer loop
       {
         //any diagonal win, after going through this outer loop check?
-        if(Xdiag1 == numGrid || Xdiag2 == numGrid) {gameOver = true; return currentPlayer.letter;}
-        else if(Odiag1 == numGrid || Odiag2 == numGrid) {gameOver = true; return currentPlayer.opponent.letter;}
+        if(Xdiag1 == numGrid || Xdiag2 == numGrid) {gameOver = true; return 'X';}
+        else if(Odiag1 == numGrid || Odiag2 == numGrid) {gameOver = true; return 'O';}
         //are the two diagonals dead by now?
-        if(Xdiag1>0 && Odiag1>0) deadCount++;
-        if(Xdiag2>0 && Odiag2>0) deadCount++;
+        if(Xdiag1>0 && Odiag1>0) {deadCount++;console.log('diag1 dead');}
+        if(Xdiag2>0 && Odiag2>0) {deadCount++;console.log('diag2 dead');}
       }
 
       //no? check for horizontal and vertical.
       for (var j=0; j<numGrid; j++) 
       {
         //horizontal
-        if(board[i][j].innerHTML == currentPlayer.letter) Xhori++;
-        else if(board[i][j].innerHTML == currentPlayer.opponent.letter)Ohori++;
+        if(board[i][j].innerHTML == 'X') Xhori++;
+        else if(board[i][j].innerHTML == 'O')Ohori++;
         //vertical
-        if(board[j][i].innerHTML == currentPlayer.letter) Xvert++;
-        else if(board[j][i].innerHTML == currentPlayer.opponent.letter)Overt++;
+        if(board[j][i].innerHTML == 'X') Xvert++;
+        else if(board[j][i].innerHTML == 'O')Overt++;
       }
       //any horizantal or vertical win, after running this inner loop?
-      if(Xhori == numGrid || Xvert == numGrid) {gameOver = true; return currentPlayer;}
-      else if(Ohori == numGrid || Overt == numGrid) {gameOver = true; return currentPlayer.opponent;}
+      if(Xhori == numGrid || Xvert == numGrid) {gameOver = true; return 'X';}
+      else if(Ohori == numGrid || Overt == numGrid) {gameOver = true; return 'O';}
       //check horizontal/vertical deads
-      if(Xhori>0 && Ohori>0) deadCount++;
-      if(Xvert>0 && Overt>0) deadCount++;
+      if(Xhori>0 && Ohori>0) {deadCount++;console.log('hori '+i+' dead');}
+      if(Xvert>0 && Overt>0) {deadCount++;console.log('vert '+i+' dead');}
       //reset horizontal and vertical count variables
       Xhori = 0; Ohori = 0; Xvert = 0; Overt = 0;
     }
@@ -475,19 +461,13 @@
   *{
     margin:0;
     padding:0;
-    font-family: 'Architects Daughter', cursive;
-    color:#706764;
-  }
-
-  p{
-    font-size:22pt;
   }
 
   div.cell{
     margin:0;
     padding:0;
     height:100%;
-    border:1px dashed #93958B;
+    border:1px solid maroon;
   }
 
   div.left{
@@ -513,24 +493,25 @@
   .X,.O{
     width:100%;
     height:100%;
-    font-size:54px;
+    font-size:40px;
     text-align:center;
     vertical-align:middle;
   }
 
   .X{
-    color:#D47A61;
+    color:#E56720;
   }
 
   .O{
-    color:#699E82;
+    color:#328748;
   }
   #container{
     width:300px;
     height:300px;
   }
-  .title{
-    margin:0.8em;
+  #title{
+    color:maroon;
+    margin:1em;
     text-align:center;
   }
 
@@ -538,9 +519,8 @@
 </head>
 <body onload="generateCells(); startGame();">
   <div class="container">
-    <h1 class="title">Tic Tac Toe</h1>
+    <h2 id="title">Tic Tac Toe</h2>
     <div id="container" class="container-fluid"></div>
-    <p class="title" id="winner-message" hidden>wins!</p>
   </div>
 </body>
 </html>
