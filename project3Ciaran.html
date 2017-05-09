@@ -163,6 +163,50 @@
       }
     }
 
+    //reset all count variables
+    Xhori=0; Ohori=0;
+    Xvert=0; Overt=0;
+    Xdiag1=0; Odiag1=0;
+    Xdiag2=0; Odiag2=0;
+    //second time looping- if it's only one step from losing, make sure that doesn't happen.
+    for(var i=0; i<numGrid; i++) 
+    {
+      //count diagonal Xs and Os
+      if(board[i][i].innerHTML == 'X') Xdiag1++;
+      else if(board[i][i].innerHTML == 'O')Odiag1++;
+      if(board[i][numGrid-1-i].innerHTML == 'X') Xdiag2++;
+      else if(board[i][numGrid-i-1].innerHTML == 'O')Odiag2++;
+
+      //Last loop, should've counted all XOdiags. any diagonal almost-win?
+      if(i==numGrid-1 && Xdiag1 == numGrid-1 && AIhelper('diag1') != false) 
+        return AIhelper('diag1');
+      else if(i==numGrid-1 && Xdiag2 == numGrid-1 && AIhelper('diag2') != false) 
+        return AIhelper('diag2');
+
+      //no? check for horizontals and verticals.
+      else {
+        for (var j=0; j<numGrid; j++) {
+          //horizontal
+          if(board[i][j].innerHTML == 'X') Xhori++;
+          else if(board[i][j].innerHTML == 'O')Ohori++;
+          //vertical
+          if(board[j][i].innerHTML == 'X') Xvert++;
+          else if(board[j][i].innerHTML == 'O') Overt++;
+          
+          //Last inner loop. Check for vertical almost-win.
+          if(j==numGrid-1 && Xvert == numGrid-1 && AIhelper('vert',i) != false)
+            return AIhelper('vert',i);
+        }
+        //check for horizontal almost-win.
+        if(Xhori == numGrid-1 && AIhelper('hori',i) != false)
+          return AIhelper('hori',i);
+        //reset horizontal and vertical count variables
+        Xhori = 0; Ohori = 0; Xvert = 0; Overt = 0;
+      }
+    }
+    return randomCoord();
+  }
+
   //If there's an only empty Coordinate in a certain row/column/diagonal line, return it.
   function AIhelper(direction, num) {
     if(direction == 'diag1') {
