@@ -11,8 +11,8 @@
   /*
   Tic Tac Toe
   Enter players' names (optional) and each person's symbol (default X and O), then start the game.
-  If any player is called "random", "AI 0", "AI 1", "AI 2", "AI 3" or "AI 4"
-  that player is played by the corresponding computer player. AI 4 is the best computer player so far.
+  If any player is called "random", "AI 0", "AI 1", "AI 2", "AI 3", "AI 4" or "AI 4"
+  that player is played by the corresponding computer player. AI 5 is the best computer player so far.
   */
 
   var numGrid;
@@ -43,7 +43,7 @@
 
   //start!
   function startGame() {
-    console.log('----GAME STARTS----');
+    //console.log('----GAME STARTS----');
     var size = parseInt(document.inputForm.size.value);
     if(isNaN(size)) numGrid = 3;
     else numGrid = size;
