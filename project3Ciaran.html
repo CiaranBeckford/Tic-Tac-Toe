@@ -15,10 +15,17 @@
     board[i] = new Array(numGrid);
 
   
-  //helper for AI2. A 2D array that contains the number of empty routes each grid is on.
+  //helper for AI2. A 2D array, each element contains the number of empty routes that grid is on.
   var map = new Array(numGrid);
   for(var i=0; i<numGrid; i++)
     map[i] = new Array(numGrid);
+  /*
+  helper for AI3. A 2D array of coordinates, 
+  whose r is identical to map and c records the number of routes that now only has opponent on it.
+  */
+  var map2 = new Array(numGrid);
+  for(var i=0; i<numGrid; i++)
+    map2[i] = new Array(numGrid);
 
   var max = 0;//largest number in map
   var maxArray = new Array();//array of grids that has the largest number in map
@@ -26,8 +33,8 @@
   var gameOver = false;
   var winner;
 
-  var player1 = new User();
-  var player2 = new Computer(AI2);
+  var player1 = new Player('User','X');
+  var player2 = new Player('AI3','O');
   player1.opponent = player2;
   player2.opponent = player1;
 
@@ -37,42 +44,46 @@
   //start!
   function startGame() {
     currentPlayer = startingPlayer;
-    currentPlayer.letter = 'a';
-    currentPlayer.opponent.letter = 'b';
     currentPlayer.move();
   }
+
   
-  function User() {
-    this.name = 'User';
-    this.letter;
+  function Player(name, letter) {
+    this.name = name;
+    this.letter = letter;
     this.opponent;
-    this.move = function() {
-      //get ready for user's move by making grids clickable and wait for user's click
-      for(var i=0; i<numGrid; i++) {
-        for(var j=0; j<numGrid; j++) 
-          board[i][j].setAttribute('onClick','placeLetter(this)');
+
+    if(name == 'random') this.move = function(){computerMove(randomCoord);};
+    else if(name == 'AI0') this.move = function(){computerMove(AI0);};
+    else if(name == 'AI1') this.move = function(){computerMove(AI1);};
+    else if(name == 'AI2') this.move = function(){computerMove(AI2);};
+    else if(name == 'AI3') this.move = function(){computerMove(AI3);};
+    else
+    {
+      this.move = function() {
+        //get ready for user's move by making grids clickable and wait for user's click
+        for(var i=0; i<numGrid; i++) {
+          for(var j=0; j<numGrid; j++) 
+            board[i][j].setAttribute('onClick','placeLetter(this)');
+        }
       }
     }
   }
 
-  function Computer(algorithm) {
-    this.name = 'AI';
-    this.letter;
-    this.opponent;
-    this.move = function() {
-      //make grids unclickable. 
-      for(var i=0; i<numGrid; i++) {
-        for(var j=0; j<numGrid; j++) {
-          board[i][j].setAttribute('onClick','');
-        }
+  
+  function computerMove(algorithm) {
+    //make grids unclickable. 
+    for(var i=0; i<numGrid; i++) {
+      for(var j=0; j<numGrid; j++) {
+        board[i][j].setAttribute('onClick','');
       }
-      //This while loop simulates a click.
-      var coord = algorithm();
-      if(board[coord.r][coord.c].innerHTML != '') console.log('error: placed at somewhere occupied');
-      setTimeout(function(){
-        placeLetter(board[coord.r][coord.c]);
-      },1000);
     }
+    //This while loop simulates a click.
+    var coord = algorithm();
+    if(board[coord.r][coord.c].innerHTML != '') console.log('error: placed at somewhere occupied');
+    setTimeout(function(){
+      placeLetter(board[coord.r][coord.c]);
+    },600);
   }
 
   //generates a random move (returns a Coordinate)
@@ -155,54 +166,9 @@
     //first time looping: win if it can
     for(var i=0; i<numGrid; i++) 
     {
-      //count diagonal Xs and Os
+      //count diagonal Xs
       if(board[i][i].innerHTML == currentPlayer.letter) Xdiag1++;
-      else if(board[i][i].innerHTML == currentPlayer.opponent.letter)Odiag1++;
       if(board[i][numGrid-1-i].innerHTML == currentPlayer.letter) Xdiag2++;
-      else if(board[i][numGrid-i-1].innerHTML == currentPlayer.opponent.letter)Odiag2++;
-
-      //Last loop, should've counted all XOdiags. any diagonal almost-win?
-      if(i==numGrid-1 && Odiag1 == numGrid-1 && AIhelper('diag1') != false) 
-        return AIhelper('diag1');
-      else if(i==numGrid-1 && Odiag2 == numGrid-1 && AIhelper('diag2') != false) 
-        return AIhelper('diag2');
-
-      //no? check for horizontals and verticals.
-      else {
-        for (var j=0; j<numGrid; j++) {
-          //horizontal
-          if(board[i][j].innerHTML == currentPlayer.letter) Xhori++;
-          else if(board[i][j].innerHTML == currentPlayer.opponent.letter)Ohori++;
-          //vertical
-          if(board[j][i].innerHTML == currentPlayer.letter) Xvert++;
-          else if(board[j][i].innerHTML == currentPlayer.opponent.letter) Overt++;
-          
-          //Last inner loop. Check for vertical almost-win.
-          if(j==numGrid-1 && Overt == numGrid-1 && AIhelper('vert',i) != false)
-            return AIhelper('vert',i);
-        }
-        //check for horizontal almost-win.
-        if(Ohori == numGrid-1 && AIhelper('hori',i) != false)
-          return AIhelper('hori',i);
-        //reset horizontal and vertical count variables
-        Xhori = 0; Ohori = 0; Xvert = 0; Overt = 0;
-      }
-    }
-
-    //reset all count variables
-    Xhori=0; Ohori=0;
-    Xvert=0; Overt=0;
-    Xdiag1=0; Odiag1=0;
-    Xdiag2=0; Odiag2=0;
-    //second time looping- if it's only one step from losing, make sure that doesn't happen.
-    for(var i=0; i<numGrid; i++) 
-    {
-      //count diagonal Xs and Os
-      if(board[i][i].innerHTML == currentPlayer.letter) Xdiag1++;
-      else if(board[i][i].innerHTML == currentPlayer.opponent.letter)Odiag1++;
-      if(board[i][numGrid-1-i].innerHTML == currentPlayer.letter) Xdiag2++;
-      else if(board[i][numGrid-i-1].innerHTML == currentPlayer.opponent.letter)Odiag2++;
-
       //Last loop, should've counted all XOdiags. any diagonal almost-win?
       if(i==numGrid-1 && Xdiag1 == numGrid-1 && AIhelper('diag1') != false) 
         return AIhelper('diag1');
@@ -214,11 +180,8 @@
         for (var j=0; j<numGrid; j++) {
           //horizontal
           if(board[i][j].innerHTML == currentPlayer.letter) Xhori++;
-          else if(board[i][j].innerHTML == currentPlayer.opponent.letter)Ohori++;
           //vertical
           if(board[j][i].innerHTML == currentPlayer.letter) Xvert++;
-          else if(board[j][i].innerHTML == currentPlayer.opponent.letter) Overt++;
-          
           //Last inner loop. Check for vertical almost-win.
           if(j==numGrid-1 && Xvert == numGrid-1 && AIhelper('vert',i) != false)
             return AIhelper('vert',i);
@@ -227,7 +190,39 @@
         if(Xhori == numGrid-1 && AIhelper('hori',i) != false)
           return AIhelper('hori',i);
         //reset horizontal and vertical count variables
-        Xhori = 0; Ohori = 0; Xvert = 0; Overt = 0;
+        Xhori = 0; Xvert = 0;
+      }
+    }
+
+    //second time looping- if it's only one step from losing, make sure that doesn't happen.
+    for(var i=0; i<numGrid; i++) 
+    {
+      //count diagonal Os
+      if(board[i][i].innerHTML == currentPlayer.opponent.letter)Odiag1++;
+      if(board[i][numGrid-i-1].innerHTML == currentPlayer.opponent.letter)Odiag2++;
+      //Last loop, should've counted all XOdiags. any diagonal almost-win?
+      if(i==numGrid-1 && Odiag1 == numGrid-1 && AIhelper('diag1') != false) 
+        return AIhelper('diag1');
+      else if(i==numGrid-1 && Odiag2 == numGrid-1 && AIhelper('diag2') != false) 
+        return AIhelper('diag2');
+
+      //no? check for horizontals and verticals.
+      else {
+        for (var j=0; j<numGrid; j++) {
+          //horizontal
+          if(board[i][j].innerHTML == currentPlayer.opponent.letter)Ohori++;
+          //vertical
+          if(board[j][i].innerHTML == currentPlayer.opponent.letter) Overt++;
+          
+          //Last inner loop. Check for vertical almost-win.
+          if(j==numGrid-1 && Overt == numGrid-1 && AIhelper('vert',i) != false)
+            return AIhelper('vert',i);
+        }
+        //check for horizontal almost-win.
+        if(Ohori == numGrid-1 && AIhelper('hori',i) != false)
+          return AIhelper('hori',i);
+        //reset horizontal and vertical count variables
+        Ohori = 0; Overt = 0;
       }
     }
     return false;
@@ -235,8 +230,8 @@
 
   /*
   First detect any emergency (one step from win or lose). If there is one, make that move.
-  If no emergency and if there's any move better than pure random, make that move: 
-    The spot that is on the largest number of all-blank horizontal/vertical/diagonal lines
+  If no emergency and there's any move better than pure random, make that move: 
+    The spot that is on the most number of all-blank horizontal/vertical/diagonal lines
     If there're multiple such moves, pick a random one among them.
   */
   function AI2() 
@@ -248,6 +243,14 @@
     return alternate;
   }
 
+  function AI3() 
+  {
+    updateMap_v2();
+    var alternate = getAlternateMove_v2();
+    var priority = emergency();
+    if(priority != false) return priority;
+    return alternate;
+  }
   
   //Core of AI2
   function getAlternateMove()
@@ -276,6 +279,50 @@
     }
     var rand = Math.floor(Math.random()*maxArray.length);
     return maxArray[rand];
+  }
+
+  var newMax;
+  var newMaxArray;
+  //core of AI3
+  function getAlternateMove_v2()
+  {
+    max = 0;
+    maxArray = new Array();//array of coordinates. R contains a coordinate to be returned, c contains c in map2
+    for(var i=0; i<numGrid; i++)
+    {
+      for(var j=0; j<numGrid; j++)//access each grid
+      {
+        if(board[i][j].innerHTML == '')//count only blank grids
+        {
+          if(map2[i][j].r > max) 
+          {
+            max = map2[i][j].r;
+            maxArray = new Array();
+            maxArray[maxArray.length] = new Coordinate(new Coordinate(i,j),map2[i][j].c);
+          } else if(map2[i][j].r == max) 
+            maxArray[maxArray.length] = new Coordinate(new Coordinate(i,j),map2[i][j].c);
+        }
+      }
+    }
+    if(maxArray.length == 0) {
+      return randomCoord();
+      console.log('calling randomCoord from getAlternateMove (shouldn\'t happen)');
+    }
+    newMax = 0;
+    newMaxArray = new Array();
+    for(var i=0; i<maxArray.length; i++)
+    {
+      if(maxArray[i].c > newMax)
+      {
+        newMax = maxArray[i].c;
+        newMaxArray = new Array();
+        newMaxArray[newMaxArray.length] = maxArray[i].r;
+      } else if (maxArray[i].c == newMax) 
+        newMaxArray[newMaxArray.length] = maxArray[i].r;
+    }
+
+    var rand = Math.floor(Math.random()*newMaxArray.length);
+    return newMaxArray[rand];
   }
   
   function updateMap() {
@@ -318,6 +365,66 @@
             }
           }
           if(v2 == numGrid) map[i][j]++;
+        }
+      }
+    }
+  }
+
+  function updateMap_v2() {
+    for(var i=0; i<numGrid; i++)
+    {
+      //r contains #blanks it is on, c contains #only-opponent routes it is on.
+      for(var j=0; j<numGrid; j++) map2[i][j] = new Coordinate(0,0);
+    }
+
+    for(var i=0; i<numGrid; i++)//each row
+    {
+      for(var j=0; j<numGrid; j++)//each grid
+      {
+        if(board[i][j].innerHTML == '')//each blank grid
+        {
+          var h = 0; var v = 0; //#blanks on the same row/column with this
+          var ho = false; var vo = false;//whether there's opponent on the same row/column
+          var hx = false; var vx = false;//whether it's already safe
+          for(var k=0; k<numGrid; k++)//h and v
+          {
+            if(board[k][j].innerHTML == '') h++;//each grid that shares i with this blank
+            else if(board[k][j].innerHTML == currentPlayer.opponent.letter) ho = true;
+            else hx = true;
+            if(board[i][k].innerHTML == '') v++;//each grid that shares j with this blank
+            else if(board[i][k].innerHTML == currentPlayer.opponent.letter) ho = true;
+            else vx = true;
+          }
+          if (h == numGrid) map2[i][j].r++;
+          if (v == numGrid) map2[i][j].r++;
+          if (ho && !hx) map2[i][j].c++;
+          if (vo && !vx) map2[i][j].c++;
+
+          var v1 = 0; var v1o = false; var v1x = false;
+          if(i == j)//on v1
+          {
+            for (var k=0; k<numGrid; k++)//each grid on v1
+            {
+              if(board[k][k].innerHTML == '') v1++;
+              else if(board[k][k].innerHTML == currentPlayer.opponent.letter) v1o = true;
+              else v1x = true;
+            }
+          }
+          if(v1 == numGrid) map2[i][j].r++;
+          if(v1o && !v1x) map2[i][j].c++;
+
+          var v2 = 0; var v2o = false; var v2x = false;
+          if(i == numGrid-j-1)//on v2
+          {
+            for (var k=0; k<numGrid; k++)//each grid on v2
+            {
+              if(board[k][numGrid-k-1].innerHTML == '')v2++;
+              else if(board[k][numGrid-k-1].innerHTML == currentPlayer.opponent.letter) v2o = true;
+              else v2x = true;
+            }
+          }
+          if(v2 == numGrid) map2[i][j].r++;
+          if(v2o && !v2x) map2[i][j].c++;
         }
       }
     }
