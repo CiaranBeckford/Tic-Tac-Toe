@@ -43,6 +43,7 @@
 
   //start!
   function startGame() {
+    console.log('----GAME STARTS----');
     var size = parseInt(document.inputForm.size.value);
     if(isNaN(size)) numGrid = 3;
     else numGrid = size;
@@ -87,44 +88,6 @@
     currentPlayer.move();
   }
   
-  function Player(name, letter) {
-    this.name = name;
-    this.letter = letter;
-    this.opponent;
-
-    if(name == 'random') this.move = function(){computerMove(randomCoord);};
-    else if(name == 'AI 0') this.move = function(){computerMove(AI0);};
-    else if(name == 'AI 1') this.move = function(){computerMove(AI1);};
-    else if(name == 'AI 2') this.move = function(){computerMove(AI2);};
-    else if(name == 'AI 3') this.move = function(){computerMove(AI3);};
-    else if(name == 'AI 4') this.move = function(){computerMove(AI4);};
-    else
-    {
-      this.move = function() {
-        //get ready for user's move by making grids clickable and wait for user's click
-        for(var i=0; i<numGrid; i++) {
-          for(var j=0; j<numGrid; j++) 
-            board[i][j].setAttribute('onClick','placeLetter(this)');
-        }
-      }
-    }
-  }
-
-  
-  function computerMove(algorithm) {
-    //make grids unclickable. 
-    for(var i=0; i<numGrid; i++) {
-      for(var j=0; j<numGrid; j++) {
-        board[i][j].setAttribute('onClick','');
-      }
-    }
-    //let AI simulate a click.
-    var coord = algorithm();
-    if(board[coord.r][coord.c].innerHTML != '') console.log('error: placed at somewhere occupied');
-    setTimeout(function(){
-      placeLetter(board[coord.r][coord.c]);
-    },600);
-  }
 
   /*
   Evenly divides #gameBoard into numGrid rows and numGrid columns of cells
@@ -255,6 +218,52 @@
       Xhori = 0; Ohori = 0; Xvert = 0; Overt = 0;
     }
     if(deadCount == 2 * numGrid + 2) {gameOver = true; return 'draw';}
+  }
+
+  function Player(name, letter) {
+    this.name = name;
+    this.letter = letter;
+    this.opponent;
+
+    if(name == 'random') this.move = function(){computerMove(randomCoord);};
+    else if(name == 'AI 0') this.move = function(){computerMove(AI0);};
+    else if(name == 'AI 1') this.move = function(){computerMove(AI1);};
+    else if(name == 'AI 2') this.move = function(){computerMove(AI2);};
+    else if(name == 'AI 3') this.move = function(){computerMove(AI3);};
+    else if(name == 'AI 4') this.move = function(){computerMove(AI4);};
+    else if(name == 'AI 5') this.move = function(){computerMove(AI5);};
+    else
+    {
+      this.move = function() {
+        //get ready for user's move by making grids clickable and wait for user's click
+        for(var i=0; i<numGrid; i++) {
+          for(var j=0; j<numGrid; j++) 
+            board[i][j].setAttribute('onClick','placeLetter(this)');
+        }
+      }
+    }
+  }
+
+  
+  function computerMove(algorithm) {
+    //make grids unclickable. 
+    for(var i=0; i<numGrid; i++) {
+      for(var j=0; j<numGrid; j++) {
+        board[i][j].setAttribute('onClick','');
+      }
+    }
+    //let AI simulate a click.
+    var coord = algorithm();
+    if(board[coord.r][coord.c].innerHTML != '') console.log('error: placed at somewhere occupied');
+    setTimeout(function(){
+      placeLetter(board[coord.r][coord.c]);
+    },600);
+    //console.log(currentPlayer.letter+': '+coord.r+','+coord.c);
+  }
+
+  function Coordinate(r, c) {
+    this.r = r;
+    this.c = c;
   }
 
 </script>

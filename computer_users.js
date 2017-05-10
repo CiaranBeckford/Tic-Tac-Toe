@@ -123,6 +123,21 @@ function AI4()
 }
 
 /*
+Very similar to AI4 except when there's a potential threat it makes a move at somewhere else to block it.
+*/
+function AI5() 
+{
+  var alternate = getAlternateMove_v2();
+  var priority = emergency_win();
+  if(priority != false) return priority;
+  else priority = emergency_lose();
+  if(priority != false) return priority;
+  else priority = potential_emergency_v2();
+  if(priority != false) return priority;
+  else return alternate;
+}
+
+/*
 First half of AI1 core
 If it's one step away from winning, it makes that move.
 Judge based on class name not innerHTML, can be used for simulations
@@ -217,6 +232,39 @@ function potential_emergency()
       if(board[i][j].innerHTML == '')//look at only blank grids
       {
         //simulates a step by the opponent to see what happens
+        board[i][j].classList.add(currentPlayer.opponent.letter);
+        var res1 = emergency_lose();
+        if(res1 != false) //it will cause an emergency
+        {
+          //What if I then block that emergency?
+          board[res1.r][res1.c].classList.add(currentPlayer.letter);
+          var res2 = emergency_lose();
+          //delete class name used for simulation
+          board[res1.r][res1.c].classList.remove(currentPlayer.letter);
+          if(res2 != false) 
+          //there's still an emergency, which means the first simulated move is a potential danger
+            result = new Coordinate(i,j); 
+        }
+        //delete class name after used for simulation
+        board[i][j].classList.remove(currentPlayer.opponent.letter);
+        if(result != false) return result;
+      }
+    }
+  }
+  return false;
+}
+
+//New in AI5. After detecting such a potential danger, place at a different spot that'll block that danger.
+function potential_emergency_v2()
+{
+  var result = false;
+  for(var i=0; i<numGrid; i++)
+  {
+    for(var j=0; j<numGrid; j++)//access each grid
+    {
+      if(board[i][j].innerHTML == '')//look at only blank grids
+      {
+        //simulate a step by the opponent to see what happens
         board[i][j].classList.add(currentPlayer.opponent.letter);
         var res1 = emergency_lose();
         if(res1 != false) //it will cause an emergency
@@ -456,7 +504,3 @@ function AIhelper(direction, num) {
   return false;
 }
 
-function Coordinate(r, c) {
-  this.r = r;
-  this.c = c;
-}
