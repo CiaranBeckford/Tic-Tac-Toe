@@ -4,33 +4,30 @@
 <meta charset="UTF-8">
 <link href="grid12.css" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css?family=Architects+Daughter" rel="stylesheet">
-<title> Project </title>
+<title>Tic Tac Toe</title>
 <script type="text/javascript" src="computer_users.js"></script>
 <script type="text/javascript">
 
   /*
   Tic Tac Toe
+  Project group members: Ciaran Beckford & Rain Du
+  
   Enter players' names (optional) and each person's symbol (default X and O), then start the game.
-  If any player is called "random", "AI 0", "AI 1", "AI 2", "AI 3", "AI 4" or "AI 4"
-  that player is played by the corresponding computer player. AI 5 is the best computer player so far.
+  If any player is called "random", "tester" or "AI",
+  that player is played by the corresponding computer player.
   */
 
   var numGrid;
 
   //a 2D array of cells (elements)
   var board;
-  
-  //helper for AI2. A 2D array, each element contains the number of empty routes that grid is on.
-  var map;
 
   /*
-  helper for AI3. A 2D array of coordinates, 
-  whose r is identical to map and c records the number of routes that now only has opponent on it.
+  A 2D array of coordinates, 
+  whose r contains the number of empty routes each grid is on, 
+  and c records the number of routes that now only has opponent on it.
   */
   var map2;
-
-  var max;//largest number in map
-  var maxArray;//array of grids that has the largest number in map
 
   var gameOver;
   var winner;
@@ -43,9 +40,13 @@
 
   //start!
   function startGame() {
-    //console.log('----GAME STARTS----');
+    console.log('----GAME STARTS----');
     var size = parseInt(document.inputForm.size.value);
     if(isNaN(size)) numGrid = 3;
+    else if(size < 1) {
+      alert('Illegal grid size.');
+      return;
+    }
     else numGrid = size;
     var p1 = document.inputForm.player1.value;
     var symbol1 = document.inputForm.player1char.value;
@@ -64,16 +65,11 @@
 
     document.getElementById('winner-message').hidden = true;
     board = new Array(numGrid);
-    map = new Array(numGrid);
     map2 = new Array(numGrid);
     for(var i=0; i<numGrid; i++){
       board[i] = new Array(numGrid);
-      map[i] = new Array(numGrid);
       map2[i] = new Array(numGrid);
     }
-    max = 0;
-    maxArray = new Array();
-    maxArray = new Array();
 
     player1 = new Player(p1,symbol1);
     player2 = new Player(p2,symbol2);
@@ -144,7 +140,7 @@
     winner = detectWin();
     if(gameOver) {
       //end the game
-      var msg = document.getElementById('winner-message')
+      var msg = document.getElementById('winner-message');
       if(winner == 'draw')
         msg.innerHTML = 'Draw!'
       else if(winner == player1 || winner == player2){
@@ -224,16 +220,14 @@
     this.name = name;
     this.letter = letter;
     this.opponent;
+    this.isHuman = false;
 
     if(name == 'random') this.move = function(){computerMove(randomCoord);};
-    else if(name == 'AI 0') this.move = function(){computerMove(AI0);};
-    else if(name == 'AI 1') this.move = function(){computerMove(AI1);};
-    else if(name == 'AI 2') this.move = function(){computerMove(AI2);};
-    else if(name == 'AI 3') this.move = function(){computerMove(AI3);};
-    else if(name == 'AI 4') this.move = function(){computerMove(AI4);};
-    else if(name == 'AI 5') this.move = function(){computerMove(AI5);};
+    else if(name == 'tester') this.move = function(){computerMove(AI1);};
+    else if(name == 'AI') this.move = function(){computerMove(AI6);};
     else
     {
+      this.isHuman = true;
       this.move = function() {
         //get ready for user's move by making grids clickable and wait for user's click
         for(var i=0; i<numGrid; i++) {
@@ -243,7 +237,6 @@
       }
     }
   }
-
   
   function computerMove(algorithm) {
     //make grids unclickable. 
@@ -254,11 +247,11 @@
     }
     //let AI simulate a click.
     var coord = algorithm();
+    console.log(currentPlayer.letter + ': ' + coord.r + ',' + coord.c);
     if(board[coord.r][coord.c].innerHTML != '') console.log('error: placed at somewhere occupied');
     setTimeout(function(){
       placeLetter(board[coord.r][coord.c]);
-    },600);
-    //console.log(currentPlayer.letter+': '+coord.r+','+coord.c);
+    },400);
   }
 
   function Coordinate(r, c) {
@@ -268,6 +261,7 @@
 
 </script>
 <style>
+
   *{
     margin:0;
     padding:0;
@@ -330,6 +324,7 @@
     margin:0.8em auto;
   }
   input{
+    background:none;
     border:0 solid #706764;
     border-bottom-width:1px;
   }
@@ -338,7 +333,7 @@
   }
   .title{
     font-size:30pt;
-    margin:1em 0;
+    margin:0.75em 0;
     text-align:center;
   }
   .msg{
@@ -346,6 +341,12 @@
     margin:0.75em 0;
     text-align:center;
   }
+
+  .sm{
+    font-size:14pt;
+    margin: 1em 0;
+  }
+
   .center{
     text-align:center;
   }
@@ -355,12 +356,13 @@
 <body>
   <div id="container" class="container">
     <h1 class="title">Tic Tac Toe</h1>
+    <p class="sm center">(Computer users list: random, tester, AI)</p>
     <form name="inputForm">
-      Player 1 <input type="text" size=10 name="player1">
-       plays with this symbol (one character): <input type="text" size=2 name="player1char"><br>
-      And player 2 <input type="text" size=10 name="player2">
-       plays with this (one character): <input type="text" size=2 name="player2char">.<br>
-      <p class="center"><input type="text" size=2 name="size"> grids per row.</p>
+      Player 1 <input type="text" size=8 name="player1">
+       plays with this symbol (a char, default 'X'): <input type="text" size=1 name="player1char">,<br>
+      and player 2 <input type="text" size=8 name="player2">
+       plays with this (a char, default 'O'): <input type="text" size=1 name="player2char">.<br>
+      <p class="center"><input type="text" size=1 name="size"> (default: 3) grids per row.</p>
       <p class="msg"><span id="start" class="msg" onclick="startGame()">Start!</span></p>
     </form>
     <div id="gameBoard" class="container-fluid" hidden></div>

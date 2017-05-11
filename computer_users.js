@@ -8,55 +8,6 @@ function randomCoord() {
 }
 
 /*
-If it's only one step away from winning, or one step from losing 
-(these two checks are not ordered) it makes a move there.
-Otherwise, make a random move.
-*/
-function AI0() 
-{
-  var Xhori=0; var Ohori=0;
-  var Xvert=0; var Overt=0;
-  var Xdiag1=0; var Odiag1=0;
-  var Xdiag2=0; var Odiag2=0;
-  for(var i=0; i<numGrid; i++) 
-  {
-    //count diagonal Xs and Os
-    if(board[i][i].innerHTML == currentPlayer.letter) Xdiag1++;
-    else if(board[i][i].innerHTML == currentPlayer.opponent.letter) Odiag1++;
-    if(board[i][numGrid-1-i].innerHTML == currentPlayer.letter) Xdiag2++;
-    else if(board[i][numGrid-i-1].innerHTML == currentPlayer.opponent.letter)Odiag2++;
-
-    //Last loop, should've counted all XOdiags. any diagonal almost-win/lose?
-    if(i==numGrid-1 && (Xdiag1 == numGrid-1 || Odiag1 == numGrid-1) && AIhelper('diag1') != false) 
-      return AIhelper('diag1');
-    else if(i==numGrid-1 && (Xdiag2 == numGrid-1 || Odiag2 == numGrid-1) && AIhelper('diag2') != false) 
-      return AIhelper('diag2');
-
-    //no? check for horizontals and verticals.
-    else {
-      for (var j=0; j<numGrid; j++) {
-        //horizontal
-        if(board[i][j].innerHTML == currentPlayer.letter) Xhori++;
-        else if(board[i][j].innerHTML == currentPlayer.opponent.letter)Ohori++;
-        //vertical
-        if(board[j][i].innerHTML == currentPlayer.letter) Xvert++;
-        else if(board[j][i].innerHTML == currentPlayer.opponent.letter) Overt++;
-        
-        //Last inner loop. Check for vertical almost-win/lose.
-        if(j==numGrid-1 && (Xvert == numGrid-1 || Overt == numGrid-1) && AIhelper('vert',i) != false)
-          return AIhelper('vert',i);
-      }
-      //check for horizontal almost-win/lose.
-      if((Xhori == numGrid-1 || Ohori == numGrid-1) && AIhelper('hori',i) != false)
-        return AIhelper('hori',i);
-      //reset horizontal and vertical count variables
-      Xhori = 0; Ohori = 0; Xvert = 0; Overt = 0;
-    }
-  }
-  return randomCoord();
-}
-
-/*
 First check if it's one step from winning (if yes, it wins)
 Then check if it's one step from losing (if yes, it blocks the opponent)
 Otherwise, make a random move.
@@ -64,77 +15,31 @@ Otherwise, make a random move.
 function AI1() 
 {
   var coord = emergency_win();
-  if(coord == false) coord = emergency_lose();
-  if(coord == false) return randomCoord();
-  return coord;
+  if(coord != false) return coord;
+  else coord = emergency_lose();
+  if(coord != false) return coord;
+  return randomCoord();
 }
 
 /*
 First detect any emergency (one step from win or lose). If there is one, make that move.
-If no emergency and there's any move better than pure random, make that move: 
-  The spot that is on the most number of all-blank horizontal/vertical/diagonal lines
-  If there're multiple such moves, pick a random one among them.
+Next see if an opponent's move can create two emergencies simultaneously:
+  If so, find a move (with recursion) that will prevent this situation.
+  If don't see any threat, make a move according to rules as follow: 
+    Find the spot(s) that is on the most number of all-blank horizontal/vertical/diagonal lines
+    If there're multiple such moves, find the spot(s) that'll block most opponent's possible winning route(s)
+    If there're still multiple moves, choose a random one.
 */
-function AI2() 
-{
-  var alternate = getAlternateMove();
-  var priority = emergency_win();
-  if(priority != false) return priority;
-  else priority = emergency_lose();
-  if(priority != false) return priority;
-  return alternate;
-}
-
-/*
-First detect any emergency (one step from win or lose). If there is one, make that move.
-If no emergency, make a move according to rules as follow: 
-  Find the spot(s) that is on the most number of all-blank horizontal/vertical/diagonal lines
-  If there're multiple such moves, find the spot(s) that'll block most opponent's possible winning route(s)
-  If there're still multiple moves, choose a random one.
-*/
-function AI3() 
+function AI6() 
 {
   var alternate = getAlternateMove_v2();
   var priority = emergency_win();
-  if(priority != false) return priority;
+  if(priority != false) {return priority;}
   else priority = emergency_lose();
-  if(priority != false) return priority;
-  return alternate;
-}
-
-/*
-First detect any emergency (one step from win or lose). If there is one, make that move.
-Next see if an opponent's move can create two emergencies simultaneously. If so, block that move.
-If don't see any threat, make a move according to rules as follow: 
-  Find the spot(s) that is on the most number of all-blank horizontal/vertical/diagonal lines
-  If there're multiple such moves, find the spot(s) that'll block most opponent's possible winning route(s)
-  If there're still multiple moves, choose a random one.
-*/
-function AI4() 
-{
-  var alternate = getAlternateMove_v2();
-  var priority = emergency_win();
-  if(priority != false) return priority;
-  else priority = emergency_lose();
-  if(priority != false) return priority;
-  else priority = potential_emergency();
-  if(priority != false) return priority;
-  else return alternate;
-}
-
-/*
-Very similar to AI4 except when there's a potential threat it makes a move at somewhere else to block it.
-*/
-function AI5() 
-{
-  var alternate = getAlternateMove_v2();
-  var priority = emergency_win();
-  if(priority != false) return priority;
-  else priority = emergency_lose();
-  if(priority != false) return priority;
-  else priority = potential_emergency_v2();
-  if(priority != false) return priority;
-  else return alternate;
+  if(priority != false) {return priority;}
+  else priority = potential_emergency_v3(1);
+  if(priority != false) {return priority;}
+  else {return alternate;}
 }
 
 /*
@@ -179,7 +84,7 @@ function emergency_win()
 }
 
 /*
-Second half of AI1 core, also a helper for AI4
+Second half of AI1 core, also a helper for AI4 and onward
 if it's one step away from losing, it blocks its opponent
 Judge based on class name not innerHTML, can be used for simulations
 */
@@ -221,8 +126,10 @@ function emergency_lose()
   return false;
 }
 
-//New in AI4. Seems quite inefficient though
-function potential_emergency()
+/*New in AI6. After detecting such a potential danger, 
+recursively find the best move to make or realize that it's screwed anyway.
+*/
+function potential_emergency_v3(threshold)
 {
   var result = false;
   for(var i=0; i<numGrid; i++)
@@ -231,101 +138,67 @@ function potential_emergency()
     {
       if(board[i][j].innerHTML == '')//look at only blank grids
       {
-        //simulates a step by the opponent to see what happens
-        board[i][j].classList.add(currentPlayer.opponent.letter);
-        var res1 = emergency_lose();
-        if(res1 != false) //it will cause an emergency
-        {
-          //What if I then block that emergency?
-          board[res1.r][res1.c].classList.add(currentPlayer.letter);
-          var res2 = emergency_lose();
-          //delete class name used for simulation
-          board[res1.r][res1.c].classList.remove(currentPlayer.letter);
-          if(res2 != false) 
-          //there's still an emergency, which means the first simulated move is a potential danger
-            result = new Coordinate(i,j); 
-        }
-        //delete class name after used for simulation
-        board[i][j].classList.remove(currentPlayer.opponent.letter);
+        result = potential_emergency_helper(new Coordinate(i,j),threshold);
         if(result != false) return result;
       }
     }
   }
+  return result;
+}
+
+function potential_emergency_helper(coord,threshold)
+{
+  if (threshold < 0) return false;
+  //simulate a step by the opponent to see what happens
+  board[coord.r][coord.c].classList.add(currentPlayer.opponent.letter);
+  var res1 = emergency_lose();
+  if(res1 != false) //it will cause an emergency
+  {
+    //What if I then block that emergency?
+    board[res1.r][res1.c].classList.add(currentPlayer.letter);
+    var res2 = emergency_lose();
+    //delete class name used for simulation
+    board[res1.r][res1.c].classList.remove(currentPlayer.letter);
+    if(res2 != false) //there's still an emergency, which means the first simulated move is a potential danger
+    {
+      //make all three branches clean from simulations first
+      board[coord.r][coord.c].classList.remove(currentPlayer.opponent.letter);
+      //take res1 and see if there's still potential emerg.
+      board[res1.r][res1.c].classList.add(currentPlayer.letter);
+      var res3 = potential_emergency_helper(coord,threshold-1);
+      var res4 = potential_emergency_helper(res2,threshold-1);
+      //console.log(res3);console.log(res4);
+      board[res1.r][res1.c].classList.remove(currentPlayer.letter);
+      if(res3==false && res4==false) return res1;
+      //res1 is not safe, so try res2.
+      board[res2.r][res2.c].classList.add(currentPlayer.letter);
+      res3 = potential_emergency_helper(coord,threshold-1);
+      res4 = potential_emergency_helper(res1,threshold-1);
+      board[res2.r][res2.c].classList.remove(currentPlayer.letter);
+      if(res3==false && res4==false) return res2;
+      //res2 is not safe, try grid.
+      board[coord.r][coord.c].classList.add(currentPlayer.letter);
+      res3 = potential_emergency_helper(res2,threshold-1);
+      res4 = potential_emergency_helper(res1,threshold-1);
+      board[coord.r][coord.c].classList.remove(currentPlayer.letter);
+      if(res3==false && res4==false) return coord;
+      //all three are not safe,
+      console.log('AI: I\'m screwed :/');
+    }
+  }
+  board[coord.r][coord.c].classList.remove(currentPlayer.opponent.letter);
   return false;
 }
 
-//New in AI5. After detecting such a potential danger, place at a different spot that'll block that danger.
-function potential_emergency_v2()
-{
-  var result = false;
-  for(var i=0; i<numGrid; i++)
-  {
-    for(var j=0; j<numGrid; j++)//access each grid
-    {
-      if(board[i][j].innerHTML == '')//look at only blank grids
-      {
-        //simulate a step by the opponent to see what happens
-        board[i][j].classList.add(currentPlayer.opponent.letter);
-        var res1 = emergency_lose();
-        if(res1 != false) //it will cause an emergency
-        {
-          //What if I then block that emergency?
-          board[res1.r][res1.c].classList.add(currentPlayer.letter);
-          var res2 = emergency_lose();
-          //delete class name used for simulation
-          board[res1.r][res1.c].classList.remove(currentPlayer.letter);
-          if(res2 != false) 
-          //there's still an emergency, which means the first simulated move is a potential danger
-            result = new Coordinate(i,j); 
-        }
-        //delete class name after used for simulation
-        board[i][j].classList.remove(currentPlayer.opponent.letter);
-        if(result != false) return result;
-      }
-    }
-  }
-  return false;
-}
-
-//New in AI2
-function getAlternateMove()//when there's no emergency
-{
-  updateMap();
-  max = 0;
-  maxArray = new Array();
-  for(var i=0; i<numGrid; i++)
-  {
-    for(var j=0; j<numGrid; j++)//access each grid
-    {
-      if(board[i][j].innerHTML == '')//count only blank grids
-      {
-        if(map[i][j] > max) 
-        {
-          max = map[i][j];
-          maxArray = new Array();
-          maxArray[maxArray.length] = new Coordinate(i,j);
-        } else if(map[i][j] == max) 
-          maxArray[maxArray.length] = new Coordinate(i,j);
-      }
-    }
-  }
-  if(maxArray.length == 0) {
-    return randomCoord();
-    console.log('calling randomCoord from getAlternateMove (shouldn\'t happen)');
-  }
-  var rand = Math.floor(Math.random()*maxArray.length);
-  return maxArray[rand];
-}
-
-var newMax;
-var newMaxArray;
 
 //Update of getAlternateMove, new in AI3
 function getAlternateMove_v2()
 {
   updateMap_v2();
-  max = 0;
-  maxArray = new Array();//array of coordinates. R contains a coordinate to be returned, c contains c in map2
+  var max = 0;//largest number in map
+  var maxArray = new Array();//array of grids that has the largest number in map
+  var newMax = 0;
+  var newMaxArray = new Array();//array of coordinates. R contains a coordinate to be returned, c contains c in map2
   for(var i=0; i<numGrid; i++)
   {
     for(var j=0; j<numGrid; j++)//access each grid
@@ -363,51 +236,6 @@ function getAlternateMove_v2()
   return newMaxArray[rand];
 }
 
-//helper for AI2
-function updateMap() {
-  for(var i=0; i<numGrid; i++)
-  {
-    for(var j=0; j<numGrid; j++) map[i][j] = 0;
-  }
-
-  for(var i=0; i<numGrid; i++)//each row
-  {
-    for(var j=0; j<numGrid; j++)//each grid
-    {
-      if(board[i][j].innerHTML == '')//each blank grid
-      {
-        var h = 0; var v = 0;
-        for(var k=0; k<numGrid; k++)//h and v
-        {
-          if(board[k][j].innerHTML == '') h++;//each grid that shares i with this blank
-          if(board[i][k].innerHTML == '') v++;//each grid that shares j with this blank
-        }
-        if (h == numGrid) map[i][j]++;
-        if (v == numGrid) map[i][j]++;
-
-        var v1 = 0; 
-        if(i == j)//on v1
-        {
-          for (var k=0; k<numGrid; k++)//each grid on v1
-          {
-            if(board[k][k].innerHTML == '') v1++;
-          }
-        }
-        if(v1 == numGrid) map[i][j]++;
-
-        var v2 = 0;
-        if(i == numGrid-j-1)//on v2
-        {
-          for (var k=0; k<numGrid; k++)//each grid on v2
-          {
-            if(board[k][numGrid-k-1].innerHTML == '')v2++;
-          }
-        }
-        if(v2 == numGrid) map[i][j]++;
-      }
-    }
-  }
-}
 
 //update of updateMap, new in AI3
 function updateMap_v2() {
@@ -471,7 +299,7 @@ function updateMap_v2() {
 }
 
 /*
-helper for AI0
+New in AI0
 If there's an only empty Coordinate in a certain row/column/diagonal, return it.
 Judge by class name not innerHTML, so it can be used for simulations
 */
@@ -503,4 +331,3 @@ function AIhelper(direction, num) {
   }
   return false;
 }
-
