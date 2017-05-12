@@ -1,0 +1,5 @@
+function handler(request, response){
+	response.end('Whelp.');
+}
+var tmp = require('http').createServer(handler);
+tmp.listen(2333);

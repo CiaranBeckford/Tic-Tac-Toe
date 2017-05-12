@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<link href="grid12.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css?family=Architects+Daughter" rel="stylesheet">
+<title>Tic Tac Toe</title>
+<script type="text/javascript" src="computer_users.js"></script>
+<script type="text/javascript">
+
+  /*
+  Tic Tac Toe
+  Project group members: Ciaran Beckford & Rain Du
+  
+  Enter players' names (optional) and each person's symbol (default X and O), then start the game.
+  If any player is called "random", "tester" or "AI",
+  that player is played by the corresponding computer player.
+  */
+
+  var numGrid;
+
+  //a 2D array of cells (elements)
+  var board;
+
+  /*
+  A 2D array of coordinates, 
+  whose r contains the number of empty routes each grid is on, 
+  and c records the number of routes that now only has opponent on it.
+  */
+  var map2;
+
+  var gameOver;
+  var winner;
+
+  var player1;
+  var player2;
+
+  var startingPlayer;
+  var currentPlayer;
+
+  //start!
+  function startGame() {
+    console.log('----GAME STARTS----');
+    var size = parseInt(document.inputForm.size.value);
+    if(isNaN(size)) numGrid = 3;
+    else if(size < 1) {
+      alert('Illegal grid size.');
+      return;
+    }
+    else numGrid = size;
+    var p1 = document.inputForm.player1.value;
+    var symbol1 = document.inputForm.player1char.value;
+    var p2 = document.inputForm.player2.value;
+    var symbol2 = document.inputForm.player2char.value;
+    if(symbol1=='') symbol1='X';
+    if(symbol2=='') symbol2='O';
+    if(symbol1.length>1 || symbol2.length>1){
+      alert('Symbols can only be one character.');
+      return;
+    }
+    if(symbol1==symbol2){
+      alert('Two players\'s symbols cannot be the same.')
+      return;
+    }
+
+    document.getElementById('winner-message').hidden = true;
+    board = new Array(numGrid);
+    map2 = new Array(numGrid);
+    for(var i=0; i<numGrid; i++){
+      board[i] = new Array(numGrid);
+      map2[i] = new Array(numGrid);
+    }
+
+    player1 = new Player(p1,symbol1);
+    player2 = new Player(p2,symbol2);
+    player1.opponent = player2;
+    player2.opponent = player1;
+
+    startingPlayer = player1;
+    currentPlayer = startingPlayer;
+    generateCells();
+    gameOver = false;
+    winner = '';
+    currentPlayer.move();
+  }
+  
+
+  /*
+  Evenly divides #gameBoard into numGrid rows and numGrid columns of cells
+  And store them into board for later access
+  */
+	function generateCells()
+  {
+    var gameBoard = document.getElementById('gameBoard');
+    //clear gameBoard
+    gameBoard.innerHTML = '';
+    gameBoard.hidden = false;
+    var proportion = 100/numGrid;//percentage of width or height per cell
+
+    for(var i=0; i<numGrid; i++) {
+      //create and add row
+      var row = document.createElement('div');
+      row.style.height = proportion + '%';
+      row.className = 'row';
+      gameBoard.appendChild(row);
+      for(var j=0; j<numGrid; j++) {
+        //create and add cell
+        var cell = document.createElement('div');
+        cell.classList.add('cell');
+        if(j == 0) cell.classList.add('left');
+        if(j == numGrid-1) cell.classList.add('right');
+        if(i == 0) cell.classList.add('top');
+        if(i == numGrid-1) cell.classList.add('bottom');
+        cell.style.position = 'relative';
+        cell.style.float = 'left';
+        cell.style.width = proportion + '%';
+        cell.style.lineHeight = gameBoard.clientHeight/numGrid + 'px';
+        row.appendChild(cell);
+        //add this cell to board (2D array)
+        board[i][j] = cell;
+      }
+    }
+  }
+
+  //onclick function from user, or simulated by an AI
+  function placeLetter(element) {
+    if(gameOver || element.innerHTML != '') return;
+    element.classList.add(currentPlayer.letter);
+    if(currentPlayer == startingPlayer){
+      element.classList.add('X');
+    }
+    else
+      element.classList.add('O');
+    element.innerHTML = currentPlayer.letter;
+    updateGameStatus();
+  }
+
+  //called each time a letter is placed
+  function updateGameStatus() {
+    winner = detectWin();
+    if(gameOver) {
+      //end the game
+      var msg = document.getElementById('winner-message');
+      if(winner == 'draw')
+        msg.innerHTML = 'Draw!'
+      else if(winner == player1 || winner == player2){
+        if(winner.name != '')
+          msg.innerHTML = winner.name + ' wins!';
+        else
+          msg.innerHTML = winner.letter + ' wins!';
+      }
+      msg.hidden = false;
+      //make grids unclickable. 
+      for(var i=0; i<numGrid; i++) {
+        for(var j=0; j<numGrid; j++) {
+          board[i][j].setAttribute('onClick','');
+        }
+      }
+    } else {
+      //change player
+      currentPlayer = currentPlayer.opponent;
+      currentPlayer.move();
+    }
+  }
+
+  /*
+  return 'X' if X wins, or return 'O' if O wins. 
+  return 'draw' if the whole board is filled but nobody wins.
+  Otherwise doesn't change or return anything.
+  */
+  var deadCount = 0;
+  function detectWin() 
+  {
+    deadCount = 0;//if a straight line contains both X and O, it's dead. No possible win there.
+    var Xhori = 0; var Ohori = 0;
+    var Xvert = 0; var Overt = 0;
+    var Xdiag1 = 0; var Odiag1 = 0;
+    var Xdiag2 = 0; var Odiag2 = 0;
+    for(var i=0; i<numGrid; i++) 
+    {
+      //count diagonal 1 every loop
+      if(board[i][i].innerHTML == currentPlayer.letter) Xdiag1++;
+      else if(board[i][i].innerHTML == currentPlayer.opponent.letter)Odiag1++;
+      //count diagonal 2 every loop
+      if(board[i][numGrid-1-i].innerHTML == currentPlayer.letter) Xdiag2++;
+      else if(board[i][numGrid-i-1].innerHTML == currentPlayer.opponent.letter)Odiag2++;
+      if(i == numGrid-1)//last outer loop
+      {
+        //any diagonal win, after going through this outer loop check?
+        if(Xdiag1 == numGrid || Xdiag2 == numGrid) {gameOver = true; return currentPlayer;}
+        else if(Odiag1 == numGrid || Odiag2 == numGrid) {gameOver = true; return currentPlayer.opponent;}
+        //are the two diagonals dead by now?
+        if(Xdiag1>0 && Odiag1>0) deadCount++;
+        if(Xdiag2>0 && Odiag2>0) deadCount++;
+      }
+
+      //no? check for horizontal and vertical.
+      for (var j=0; j<numGrid; j++) 
+      {
+        //horizontal
+        if(board[i][j].innerHTML == currentPlayer.letter) Xhori++;
+        else if(board[i][j].innerHTML == currentPlayer.opponent.letter)Ohori++;
+        //vertical
+        if(board[j][i].innerHTML == currentPlayer.letter) Xvert++;
+        else if(board[j][i].innerHTML == currentPlayer.opponent.letter)Overt++;
+      }
+      //any horizantal or vertical win, after running this inner loop?
+      if(Xhori == numGrid || Xvert == numGrid) {gameOver = true; return currentPlayer;}
+      else if(Ohori == numGrid || Overt == numGrid) {gameOver = true; return currentPlayer.opponent;}
+      //check horizontal/vertical deads
+      if(Xhori>0 && Ohori>0) deadCount++;
+      if(Xvert>0 && Overt>0) deadCount++;
+      //reset horizontal and vertical count variables
+      Xhori = 0; Ohori = 0; Xvert = 0; Overt = 0;
+    }
+    if(deadCount == 2 * numGrid + 2) {gameOver = true; return 'draw';}
+  }
+
+  function Player(name, letter) {
+    this.name = name;
+    this.letter = letter;
+    this.opponent;
+    this.isHuman = false;
+
+    if(name == 'random') this.move = function(){computerMove(randomCoord);};
+    else if(name == 'tester') this.move = function(){computerMove(AI1);};
+    else if(name == 'AI') this.move = function(){computerMove(AI6);};
+    else
+    {
+      this.isHuman = true;
+      this.move = function() {
+        //get ready for user's move by making grids clickable and wait for user's click
+        for(var i=0; i<numGrid; i++) {
+          for(var j=0; j<numGrid; j++) 
+            board[i][j].setAttribute('onClick','placeLetter(this)');
+        }
+      }
+    }
+  }
+  
+  function computerMove(algorithm) {
+    //make grids unclickable. 
+    for(var i=0; i<numGrid; i++) {
+      for(var j=0; j<numGrid; j++) {
+        board[i][j].setAttribute('onClick','');
+      }
+    }
+    //let AI simulate a click.
+    var coord = algorithm();
+    console.log(currentPlayer.letter + ': ' + coord.r + ',' + coord.c);
+    if(board[coord.r][coord.c].innerHTML != '') console.log('error: placed at somewhere occupied');
+    setTimeout(function(){
+      placeLetter(board[coord.r][coord.c]);
+    },400);
+  }
+
+  function Coordinate(r, c) {
+    this.r = r;
+    this.c = c;
+  }
+
+</script>
+<style>
+
+  *{
+    margin:0;
+    padding:0;
+    font-family: 'Architects Daughter', cursive;
+    font-size:18pt;
+    color:#706764;
+  }
+
+  #container{
+    padding:15px;
+  }
+
+  div.row{
+    width:100%;
+    height:33.333333%;
+  }
+  div.cell{
+    margin:0;
+    padding:0;
+    height:100%;
+    border:1px dashed #93958B;
+  }
+
+  div.left{
+    border-left:none;
+  }
+
+  div.right{
+    border-right:none;
+  }
+
+  div.top{
+    border-top:none;
+  }
+
+  div.bottom{
+    border-bottom:none;
+  }
+
+  div.inner:hover{
+    background-color: #ffffcc;
+  }
+
+  .X,.O{
+    width:100%;
+    height:100%;
+    font-size:54px;
+    text-align:center;
+    vertical-align:middle;
+  }
+
+  .X{
+    color:#D47A61;
+  }
+
+  .O{
+    color:#699E82;
+  }
+
+  #gameBoard{
+    width:900px;
+    height:900px;
+    margin:0.8em auto;
+  }
+  input{
+    background:none;
+    border:0 solid #706764;
+    border-bottom-width:1px;
+  }
+  #start:hover{
+    text-decoration:underline;
+  }
+  .title{
+    font-size:30pt;
+    margin:0.75em 0;
+    text-align:center;
+  }
+  .msg{
+    font-size:22pt;
+    margin:0.75em 0;
+    text-align:center;
+  }
+
+  .sm{
+    font-size:14pt;
+    margin: 1em 0;
+  }
+
+  .center{
+    text-align:center;
+  }
+
+</style>
+</head>
+<body>
+  <div id="container" class="container">
+    <h1 class="title">Tic Tac Toe</h1>
+    <p class="sm center">(Computer users list: random, tester, AI)</p>
+    <form name="inputForm" hidden>
+      Player 1 <input type="text" size=8 name="player1">
+       plays with this symbol (a char, default 'X'): <input type="text" size=1 name="player1char">,<br>
+      and player 2 <input type="text" size=8 name="player2">
+       plays with this (a char, default 'O'): <input type="text" size=1 name="player2char">.<br>
+      <p class="center"><input type="text" size=1 name="size"> (default: 3) grids per row.</p>
+      <p class="msg"><span id="start" class="msg" onclick="startGame()">Start!</span></p>
+    </form>
+    <div id="gameBoard" class="container-fluid">
+      <div class="row">
+
+        <div class="cell col-xs-4">
+          <div class="row">
+            <div class="inner cell col-xs-4"></div>
+            <div class="inner cell col-xs-4"></div>
+            <div class="inner cell col-xs-4"></div>
+          </div>
+          <div class="row">
+            <div class="inner cell col-xs-4"></div>
+            <div class="inner cell col-xs-4"></div>
+            <div class="inner cell col-xs-4"></div>
+          </div>
+          <div class="row">
+            <div class="inner cell col-xs-4"></div>
+            <div class="inner cell col-xs-4"></div>
+            <div class="inner cell col-xs-4"></div>
+          </div>
+        </div>
+
+        <div class="cell col-xs-4">
+          <div class="row">
+            <div class="inner cell col-xs-4"></div>
+            <div class="inner cell col-xs-4"></div>
+            <div class="inner cell col-xs-4"></div>
+          </div>
+          <div class="row">
+            <div class="inner cell col-xs-4"></div>
+            <div class="inner cell col-xs-4"></div>
+            <div class="inner cell col-xs-4"></div>
+          </div>
+          <div class="row">
+            <div class="inner cell col-xs-4"></div>
+            <div class="inner cell col-xs-4"></div>
+            <div class="inner cell col-xs-4"></div>
+          </div>
+        </div>
+
+        <div class="cell col-xs-4">
+          <div class="row">
+            <div class="inner cell col-xs-4"></div>
+            <div class="inner cell col-xs-4"></div>
+            <div class="inner cell col-xs-4"></div>
+          </div>
+          <div class="row">
+            <div class="inner cell col-xs-4"></div>
+            <div class="inner cell col-xs-4"></div>
+            <div class="inner cell col-xs-4"></div>
+          </div>
+          <div class="row">
+            <div class="inner cell col-xs-4"></div>
+            <div class="inner cell col-xs-4"></div>
+            <div class="inner cell col-xs-4"></div>
+          </div>
+        </div>
+
+      </div>
+      <div class="row">
+
+        <div class="cell col-xs-4">
+          <div class="row">
+            <div class="inner cell col-xs-4"></div>
+            <div class="inner cell col-xs-4"></div>
+            <div class="inner cell col-xs-4"></div>
+          </div>
+          <div class="row">
+            <div class="inner cell col-xs-4"></div>
+            <div class="inner cell col-xs-4"></div>
+            <div class="inner cell col-xs-4"></div>
+          </div>
+          <div class="row">
+            <div class="inner cell col-xs-4"></div>
+            <div class="inner cell col-xs-4"></div>
+            <div class="inner cell col-xs-4"></div>
+          </div>
+        </div>
+
+        <div class="cell col-xs-4">
+          <div class="row">
+            <div class="inner cell col-xs-4"></div>
+            <div class="inner cell col-xs-4"></div>
+            <div class="inner cell col-xs-4"></div>
+          </div>
+          <div class="row">
+            <div class="inner cell col-xs-4"></div>
+            <div class="inner cell col-xs-4"></div>
+            <div class="inner cell col-xs-4"></div>
+          </div>
+          <div class="row">
+            <div class="inner cell col-xs-4"></div>
+            <div class="inner cell col-xs-4"></div>
+            <div class="inner cell col-xs-4"></div>
+          </div>
+        </div>
+
+        <div class="cell col-xs-4">
+          <div class="row">
+            <div class="inner cell col-xs-4"></div>
+            <div class="inner cell col-xs-4"></div>
+            <div class="inner cell col-xs-4"></div>
+          </div>
+          <div class="row">
+            <div class="inner cell col-xs-4"></div>
+            <div class="inner cell col-xs-4"></div>
+            <div class="inner cell col-xs-4"></div>
+          </div>
+          <div class="row">
+            <div class="inner cell col-xs-4"></div>
+            <div class="inner cell col-xs-4"></div>
+            <div class="inner cell col-xs-4"></div>
+          </div>
+        </div>
+
+      </div>
+      <div class="row">
+
+        <div class="cell col-xs-4">
+          <div class="row">
+            <div class="inner cell col-xs-4"></div>
+            <div class="inner cell col-xs-4"></div>
+            <div class="inner cell col-xs-4"></div>
+          </div>
+          <div class="row">
+            <div class="inner cell col-xs-4"></div>
+            <div class="inner cell col-xs-4"></div>
+            <div class="inner cell col-xs-4"></div>
+          </div>
+          <div class="row">
+            <div class="inner cell col-xs-4"></div>
+            <div class="inner cell col-xs-4"></div>
+            <div class="inner cell col-xs-4"></div>
+          </div>
+        </div>
+
+        <div class="cell col-xs-4">
+          <div class="row">
+            <div class="inner cell col-xs-4"></div>
+            <div class="inner cell col-xs-4"></div>
+            <div class="inner cell col-xs-4"></div>
+          </div>
+          <div class="row">
+            <div class="inner cell col-xs-4"></div>
+            <div class="inner cell col-xs-4"></div>
+            <div class="inner cell col-xs-4"></div>
+          </div>
+          <div class="row">
+            <div class="inner cell col-xs-4"></div>
+            <div class="inner cell col-xs-4"></div>
+            <div class="inner cell col-xs-4"></div>
+          </div>
+        </div>
+
+        <div class="cell col-xs-4">
+          <div class="row">
+            <div class="inner cell col-xs-4"></div>
+            <div class="inner cell col-xs-4"></div>
+            <div class="inner cell col-xs-4"></div>
+          </div>
+          <div class="row">
+            <div class="inner cell col-xs-4"></div>
+            <div class="inner cell col-xs-4"></div>
+            <div class="inner cell col-xs-4"></div>
+          </div>
+          <div class="row">
+            <div class="inner cell col-xs-4"></div>
+            <div class="inner cell col-xs-4"></div>
+            <div class="inner cell col-xs-4"></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <p class="msg" id="winner-message" hidden></p>
+  </div>
+</body>
+</html>
