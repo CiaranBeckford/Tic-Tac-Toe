@@ -220,14 +220,12 @@
     this.name = name;
     this.letter = letter;
     this.opponent;
-    this.isHuman = false;
 
     if(name == 'random') this.move = function(){computerMove(randomCoord);};
     else if(name == 'tester') this.move = function(){computerMove(AI1);};
     else if(name == 'AI') this.move = function(){computerMove(AI6);};
     else
     {
-      this.isHuman = true;
       this.move = function() {
         //get ready for user's move by making grids clickable and wait for user's click
         for(var i=0; i<numGrid; i++) {

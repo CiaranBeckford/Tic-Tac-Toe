@@ -5,7 +5,7 @@
 <link href="grid12.css" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css?family=Architects+Daughter" rel="stylesheet">
 <title>Tic Tac Toe</title>
-<script type="text/javascript" src="computer_users.js"></script>
+<script type="text/javascript" src="../computer_users.js"></script>
 <script type="text/javascript">
 
   /*
@@ -19,7 +19,7 @@
 
   var numGrid;
 
-  //a 2D array of cells (elements)
+  //a 2D array of cells (elements), or a Board object
   var board;
 
   /*
@@ -37,6 +37,21 @@
 
   var startingPlayer;
   var currentPlayer;
+
+  function onStart()
+  {
+    if (document.inputForm.checkb.checked)
+    {
+      document.getElementById('gameboard2').hidden = false;
+      document.getElementById('gameboard1').hidden = true;
+      startUltimate();
+    }
+    else
+    {
+      startGame();
+      
+    }
+  }
 
   //start!
   function startGame() {
@@ -83,18 +98,68 @@
     winner = '';
     currentPlayer.move();
   }
-  
+
+  function startUltimate() {
+    console.log('----ULTIMATE GAME STARTS----');
+
+    var p1 = document.inputForm.player1.value;
+    var symbol1 = document.inputForm.player1char.value;
+    var p2 = document.inputForm.player2.value;
+    var symbol2 = document.inputForm.player2char.value;
+    if(symbol1=='') symbol1='X';
+    if(symbol2=='') symbol2='O';
+    if(symbol1.length>1 || symbol2.length>1){
+      alert('Symbols can only be one character.');
+      return;
+    }
+    if(symbol1==symbol2){
+      alert('Two players\'s symbols cannot be the same.')
+      return;
+    }
+
+    var outers = document.getElementsByClassName('outer');
+    var inners = document.getElementsByClassName('inner');
+    board = new Board();
+    for(var i=0; i<9; i++) {
+      board.children[i] = new Board()
+      board.children[i].obj = outers[i];
+      for(var j=0; j<9; j++) {
+        board.children[i].children[j] = inners[i*9+j];
+      }
+    }
+
+    document.getElementById('winner-message').hidden = true;
+    
+    player1 = new Player(p1,symbol1);
+    player2 = new Player(p2,symbol2);
+    player1.opponent = player2;
+    player2.opponent = player1;
+
+    startingPlayer = player1;
+    currentPlayer = startingPlayer;
+    gameOver = false;
+    winner = '';
+    currentPlayer.move();
+  }
+
+  function Board() {
+    this.obj;
+    this.children = new Array(9);
+    this.get = function(index) {
+      return this.children[index];
+    }
+  }
 
   /*
-  Evenly divides #gameBoard into numGrid rows and numGrid columns of cells
+  Evenly divides #gameboard1 into numGrid rows and numGrid columns of cells
   And store them into board for later access
   */
 	function generateCells()
   {
-    var gameBoard = document.getElementById('gameBoard');
-    //clear gameBoard
-    gameBoard.innerHTML = '';
-    gameBoard.hidden = false;
+    var gameboard1 = document.getElementById('gameboard1');
+    //clear gameboard1
+    gameboard1.innerHTML = '';
+    gameboard1.hidden = false;
     var proportion = 100/numGrid;//percentage of width or height per cell
 
     for(var i=0; i<numGrid; i++) {
@@ -102,7 +167,7 @@
       var row = document.createElement('div');
       row.style.height = proportion + '%';
       row.className = 'row';
-      gameBoard.appendChild(row);
+      gameboard1.appendChild(row);
       for(var j=0; j<numGrid; j++) {
         //create and add cell
         var cell = document.createElement('div');
@@ -114,7 +179,7 @@
         cell.style.position = 'relative';
         cell.style.float = 'left';
         cell.style.width = proportion + '%';
-        cell.style.lineHeight = gameBoard.clientHeight/numGrid + 'px';
+        cell.style.lineHeight = gameboard1.clientHeight/numGrid + 'px';
         row.appendChild(cell);
         //add this cell to board (2D array)
         board[i][j] = cell;
@@ -164,8 +229,8 @@
   }
 
   /*
-  return 'X' if X wins, or return 'O' if O wins. 
-  return 'draw' if the whole board is filled but nobody wins.
+  return the Player object of the winner.
+  return 'draw' if the whole board is filled but nobody wins or all routes are "dead".
   Otherwise doesn't change or return anything.
   */
   var deadCount = 0;
@@ -321,7 +386,12 @@
     color:#699E82;
   }
 
-  #gameBoard{
+  #gameboard1{
+    width:300px;
+    height:300px;
+    margin:0.8em auto;
+  }
+  #gameboard2{
     width:900px;
     height:900px;
     margin:0.8em auto;
@@ -360,17 +430,17 @@
   <div id="container" class="container">
     <h1 class="title">Tic Tac Toe</h1>
     <p class="sm center">(Computer users list: random, tester, AI)</p>
-    <form name="inputForm" hidden>
+    <form name="inputForm" >
       Player 1 <input type="text" size=8 name="player1">
        plays with this symbol (a char, default 'X'): <input type="text" size=1 name="player1char">,<br>
       and player 2 <input type="text" size=8 name="player2">
        plays with this (a char, default 'O'): <input type="text" size=1 name="player2char">.<br>
       <p class="center"><input type="text" size=1 name="size"> (default: 3) grids per row.</p>
-      <p class="msg"><span id="start" class="msg" onclick="startGame()">Start!</span></p>
-    </form>
-    <div id="gameBoard" class="container-fluid">
+      <p class="msg"><span id="start" class="msg" onclick="onStart()">Start!</span></p>
+      <p> <input type="checkbox" name="checkb"> Check for meta tic-tac-toe; Leave unchecked for normal tic-tac-toe</p> 
+    </form>      
+    <div id="gameboard2" class="container-fluid" hidden>
       <div class="row">
-
         <div class="cell col-xs-4">
           <div class="row">
             <div class="inner cell col-xs-4"></div>
@@ -541,6 +611,7 @@
 
       </div>
     </div>
+    <div id="gameboard1" class="container-fluid" ></div> 
     <p class="msg" id="winner-message" hidden></p>
   </div>
 </body>
