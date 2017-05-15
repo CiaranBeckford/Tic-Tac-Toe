@@ -38,6 +38,21 @@
   var startingPlayer;
   var currentPlayer;
 
+  function onStart()
+  {
+    if (document.inputForm.checkb.checked)
+    {
+      document.getElementById('gameboard2').style.display='block';
+      document.getElementById('gameboard1').style.visibility='hidden';
+    }
+    else
+    {
+      document.getElementById('gameboard2').style.display = 'none';
+      startGame();
+      
+    }
+  }
+
   //start!
   function startGame() {
     console.log('----GAME STARTS----');
@@ -83,18 +98,17 @@
     winner = '';
     currentPlayer.move();
   }
-  
 
   /*
-  Evenly divides #gameBoard into numGrid rows and numGrid columns of cells
+  Evenly divides #gameboard1 into numGrid rows and numGrid columns of cells
   And store them into board for later access
   */
 	function generateCells()
   {
-    var gameBoard = document.getElementById('gameBoard');
-    //clear gameBoard
-    gameBoard.innerHTML = '';
-    gameBoard.hidden = false;
+    var gameboard1 = document.getElementById('gameboard1');
+    //clear gameboard1
+    gameboard1.innerHTML = '';
+    gameboard1.hidden = false;
     var proportion = 100/numGrid;//percentage of width or height per cell
 
     for(var i=0; i<numGrid; i++) {
@@ -102,7 +116,7 @@
       var row = document.createElement('div');
       row.style.height = proportion + '%';
       row.className = 'row';
-      gameBoard.appendChild(row);
+      gameboard1.appendChild(row);
       for(var j=0; j<numGrid; j++) {
         //create and add cell
         var cell = document.createElement('div');
@@ -114,7 +128,7 @@
         cell.style.position = 'relative';
         cell.style.float = 'left';
         cell.style.width = proportion + '%';
-        cell.style.lineHeight = gameBoard.clientHeight/numGrid + 'px';
+        cell.style.lineHeight = gameboard1.clientHeight/numGrid + 'px';
         row.appendChild(cell);
         //add this cell to board (2D array)
         board[i][j] = cell;
@@ -321,10 +335,16 @@
     color:#699E82;
   }
 
-  #gameBoard{
+  #gameboard1{
     width:900px;
     height:900px;
     margin:0.8em auto;
+  }
+  #gameboard2{
+    width:900px;
+    height:900px;
+    margin:0.8em auto;
+    display: none;
   }
   input{
     background:none;
@@ -360,17 +380,17 @@
   <div id="container" class="container">
     <h1 class="title">Tic Tac Toe</h1>
     <p class="sm center">(Computer users list: random, tester, AI)</p>
-    <form name="inputForm" hidden>
+    <form name="inputForm" >
       Player 1 <input type="text" size=8 name="player1">
        plays with this symbol (a char, default 'X'): <input type="text" size=1 name="player1char">,<br>
       and player 2 <input type="text" size=8 name="player2">
        plays with this (a char, default 'O'): <input type="text" size=1 name="player2char">.<br>
       <p class="center"><input type="text" size=1 name="size"> (default: 3) grids per row.</p>
-      <p class="msg"><span id="start" class="msg" onclick="startGame()">Start!</span></p>
-    </form>
-    <div id="gameBoard" class="container-fluid">
+      <p class="msg"><span id="start" class="msg" onclick="onStart()">Start!</span></p>
+      <p> <input type="checkbox" name="checkb"> Check for meta tic-tac-toe; Leave unchecked for normal tic-tac-toe</p> 
+    </form>      
+    <div id="gameboard2" class="container-fluid" >
       <div class="row">
-
         <div class="cell col-xs-4">
           <div class="row">
             <div class="inner cell col-xs-4"></div>
@@ -541,6 +561,7 @@
 
       </div>
     </div>
+    <div id="gameboard1" class="container-fluid" ></div> 
     <p class="msg" id="winner-message" hidden></p>
   </div>
 </body>
