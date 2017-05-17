@@ -54,13 +54,6 @@
     startUltimate();
   }
 
-  function test()
-  {
-    for(var i=0; i<inners.length; i++) 
-      inners[i].setAttribute('onClick','placeLetter(this)');
-  }
-
-
   function startUltimate() {
     console.log('----ULTIMATE GAME STARTS----');
 
@@ -217,10 +210,8 @@
     {
       this.move = function() {
         //get ready for user's move by making grids clickable and wait for user's click
-        for(var i=0; i<numGrid; i++) {
-          for(var j=0; j<numGrid; j++) 
-            board[i][j].setAttribute('onClick','placeLetter(this)');
-        }
+        for(var i=0; i<inners.length; i++)
+          inners[i].setAttribute('onClick','placeLetter(this)');
       }
     }
   }
@@ -293,6 +284,7 @@
 
   .X,.O{
     font-size:54px;
+    line-height:100px;/* 1/9 of total board size */
     text-align:center;
     vertical-align:middle;
   }
