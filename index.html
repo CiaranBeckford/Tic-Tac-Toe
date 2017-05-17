@@ -164,8 +164,9 @@
   }
 
   /*
-  return 'X' if X wins, or return 'O' if O wins. 
+  return the Player object of the winner if someone wins.
   return 'draw' if the whole board is filled but nobody wins.
+  In both cases gameOver becomes true.
   Otherwise doesn't change or return anything.
   */
   var deadCount = 0;
