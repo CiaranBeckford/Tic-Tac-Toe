@@ -18,6 +18,7 @@
   */
 
   var numGrid;
+  var numBigGrid = 9;
 
   //a 2D array of cells (elements)
   var board;
@@ -44,7 +45,9 @@
     {
       document.getElementById('gameboard2').style.display='block';
       document.getElementById('gameboard1').style.visibility='hidden';
-    }
+      
+      
+   }
     else
     {
       document.getElementById('gameboard2').style.display = 'none';
@@ -52,6 +55,56 @@
       
     }
   }
+
+function metaPlayer(name, letter) {
+    this.name = name;
+    this.letter = letter;
+    this.opponent;
+    this.isHuman = true;
+    this.move = function() {
+        //get ready for user's move by making grids clickable and wait for user's click
+        for(var i=0; i<numGrid; i++) 
+          for(var j=0; j<numGrid; j++) 
+            board[i][j].setAttribute('onClick','placeLetter(this)');        
+      }    
+  }
+
+function placeMetaLetter(element) {
+    if(gameOver || element.innerHTML != '') return;
+    element.classList.add(currentPlayer.letter);
+    if(currentPlayer == startingPlayer){
+      element.classList.add('X');
+    }
+    else
+      element.classList.add('O');
+    element.innerHTML = currentPlayer.letter;
+    updateGameStatus();
+  }  
+function metaGameStatus()
+{
+  player1 = new Player(p1,symbol1);
+    player2 = new Player(p2,symbol2);
+    player1.opponent = player2;
+    player2.opponent = player1;
+
+    startingPlayer = player1;
+    currentPlayer = startingPlayer;
+currentPlayer.move();
+}
+
+function test()
+      {
+        board = new Array(numBigGrid);
+        for(var i=0; i<numBigGrid; i++)
+        board[i] = new Array(numBigGrid);
+
+        for(var i=0; i<numBigGrid; i++) {
+          for(var j=0; j<numBigGrid; j++) 
+            board[i][j].setAttribute('onClick', 'placeLetter()');
+         // document.getElementById('cell01').style.backgroundColor = 'blue';
+          //document.getElementById('row01').style.backgroundColor = //'#FF8E8C';
+          }
+    }
 
   //start!
   function startGame() {
@@ -392,17 +445,17 @@
     <div id="gameboard2" class="container-fluid" >
       <div class="row">
         <div class="cell col-xs-4">
-          <div class="row">
+          <div class="row" id="row01">
+            <div class="inner cell col-xs-4" onclick="red()" id="cell01"></div>
+            <div class="inner cell col-xs-4"></div>
+            <div class="inner cell col-xs-4"></div>
+          </div>
+          <div class="row" id="row02">
             <div class="inner cell col-xs-4"></div>
             <div class="inner cell col-xs-4"></div>
             <div class="inner cell col-xs-4"></div>
           </div>
-          <div class="row">
-            <div class="inner cell col-xs-4"></div>
-            <div class="inner cell col-xs-4"></div>
-            <div class="inner cell col-xs-4"></div>
-          </div>
-          <div class="row">
+          <div class="row" id="row03">
             <div class="inner cell col-xs-4"></div>
             <div class="inner cell col-xs-4"></div>
             <div class="inner cell col-xs-4"></div>
