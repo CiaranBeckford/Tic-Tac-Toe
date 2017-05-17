@@ -49,69 +49,17 @@
 
   function onStart()
   {
-    if (document.inputForm.checkb.checked)
-    {
-      document.getElementById('gameboard2').hidden = false;
-      document.getElementById('gameboard1').hidden = true;
-      startUltimate();
-    }
-    else
-    {
-      startGame();
-    }
+    document.getElementById('gameboard2').hidden = false;
+    document.getElementById('gameboard1').hidden = true;
+    startUltimate();
   }
 
-function test()
-{
-  for(var i=0; i<numBigGrid; i++) 
-    inners[i].setAttribute('onClick','placeLetter(this)');
-}
-
-  //start!
-  function startGame() {
-    console.log('----GAME STARTS----');
-    var size = parseInt(document.inputForm.size.value);
-    if(isNaN(size)) numGrid = 3;
-    else if(size < 1) {
-      alert('Illegal grid size.');
-      return;
-    }
-    else numGrid = size;
-    var p1 = document.inputForm.player1.value;
-    var symbol1 = document.inputForm.player1char.value;
-    var p2 = document.inputForm.player2.value;
-    var symbol2 = document.inputForm.player2char.value;
-    if(symbol1=='') symbol1='X';
-    if(symbol2=='') symbol2='O';
-    if(symbol1.length>1 || symbol2.length>1){
-      alert('Symbols can only be one character.');
-      return;
-    }
-    if(symbol1==symbol2){
-      alert('Two players\'s symbols cannot be the same.')
-      return;
-    }
-
-    document.getElementById('winner-message').hidden = true;
-    board = new Array(numGrid);
-    map2 = new Array(numGrid);
-    for(var i=0; i<numGrid; i++){
-      board[i] = new Array(numGrid);
-      map2[i] = new Array(numGrid);
-    }
-
-    player1 = new Player(p1,symbol1);
-    player2 = new Player(p2,symbol2);
-    player1.opponent = player2;
-    player2.opponent = player1;
-
-    startingPlayer = player1;
-    currentPlayer = startingPlayer;
-    generateCells();
-    gameOver = false;
-    winner = '';
-    currentPlayer.move();
+  function test()
+  {
+    for(var i=0; i<inners.length; i++) 
+      inners[i].setAttribute('onClick','placeLetter(this)');
   }
+
 
   function startUltimate() {
     console.log('----ULTIMATE GAME STARTS----');
@@ -165,42 +113,6 @@ function test()
     }
   }
 
-  /*
-  Evenly divides #gameboard1 into numGrid rows and numGrid columns of cells
-  And store them into board for later access
-  */
-	function generateCells()
-  {
-    var gameboard1 = document.getElementById('gameboard1');
-    //clear gameboard1
-    gameboard1.innerHTML = '';
-    gameboard1.hidden = false;
-    var proportion = 100/numGrid;//percentage of width or height per cell
-
-    for(var i=0; i<numGrid; i++) {
-      //create and add row
-      var row = document.createElement('div');
-      row.style.height = proportion + '%';
-      row.className = 'row';
-      gameboard1.appendChild(row);
-      for(var j=0; j<numGrid; j++) {
-        //create and add cell
-        var cell = document.createElement('div');
-        cell.classList.add('cell');
-        if(j == 0) cell.classList.add('left');
-        if(j == numGrid-1) cell.classList.add('right');
-        if(i == 0) cell.classList.add('top');
-        if(i == numGrid-1) cell.classList.add('bottom');
-        cell.style.position = 'relative';
-        cell.style.float = 'left';
-        cell.style.width = proportion + '%';
-        cell.style.lineHeight = gameboard1.clientHeight/numGrid + 'px';
-        row.appendChild(cell);
-        //add this cell to board (2D array)
-        board[i][j] = cell;
-      }
-    }
-  }
 
   //onclick function from user, or simulated by an AI
   function placeLetter(element) {
@@ -231,18 +143,8 @@ function test()
       }
       msg.hidden = false;
       //make grids unclickable. 
-      if(!isMeta){
-        for(var i=0; i<numGrid; i++) {
-          for(var j=0; j<numGrid; j++) {
-            board[i][j].setAttribute('onClick','');
-          }
-        }
-      }
-      else {
-        for(var i=0; i<inners.length; i++){
-          inners[i].setAttribute('onClick', '');
-        }
-      }
+      for(var i=0; i<inners.length; i++)
+        inners[i].setAttribute('onClick', '');
     } else {
       //change player
       currentPlayer = currentPlayer.opponent;
@@ -390,8 +292,6 @@ function test()
   }
 
   .X,.O{
-    width:100%;
-    height:100%;
     font-size:54px;
     text-align:center;
     vertical-align:middle;
@@ -403,12 +303,6 @@ function test()
 
   .O{
     color:#699E82;
-  }
-
-  #gameboard1{
-    width:300px;
-    height:300px;
-    margin:0.8em auto;
   }
 
   #gameboard2{
