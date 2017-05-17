@@ -44,7 +44,7 @@
   //----meta-only variables----
   var inners;
   var outers;
-  var active;
+  var active = -1;
 
 
   function onStart()
@@ -110,6 +110,12 @@
   //onclick function from user, or simulated by an AI
   function placeLetter(element) {
     if(gameOver || element.innerHTML != '') return;
+    for(var i=0; i<inners.length; i++) {
+      if(inners[i] == element) {
+        active = i - (Math.floor(i/9)*9);
+        break;
+      }
+    }
     element.classList.add(currentPlayer.letter);
     if(currentPlayer == startingPlayer){
       element.classList.add('X');
@@ -210,8 +216,15 @@
     {
       this.move = function() {
         //get ready for user's move by making grids clickable and wait for user's click
-        for(var i=0; i<inners.length; i++)
-          inners[i].setAttribute('onClick','placeLetter(this)');
+        if(active == -1){
+          for(var i=0; i<inners.length; i++)
+            inners[i].setAttribute('onClick','placeLetter(this)');
+        } else {
+          for(var i=0; i<inners.length; i++)
+            inners[i].setAttribute('onClick','');
+          for(var i=0; i<9; i++)
+            inners[active*9+i].setAttribute('onClick','placeLetter(this)');
+        }
       }
     }
   }
@@ -249,7 +262,8 @@
   }
 
   #container{
-    padding:15px;  }
+    padding:15px;  
+  }
 
   div.row{
     width:100%;
