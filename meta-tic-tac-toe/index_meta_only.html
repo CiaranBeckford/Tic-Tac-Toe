@@ -113,6 +113,7 @@
     var localWinner = result.c;
 
     if(localGameOver) {
+      if(nextActive == justActive) nextActive = -1;
       board.children[justActive].active = false;
       board.children[justActive].obj.classList.add('dead');
       if(result.c=='draw') {
@@ -265,8 +266,8 @@
         else if(globalArr[j][i].classList.contains('deadDraw')) deadV++;
       }
       //any horizantal or vertical win, after running this inner loop?
-      if(Xhori == 3 || Xvert == 3) {result.r = true; result.c = currentPlayer;}
-      else if(Ohori == 3 || Overt == 3) {result.r = true; result.c = currentPlayer.opponent;}
+      if(Xhori == 3 || Xvert == 3) {result.r = true; result.c = player1;}
+      else if(Ohori == 3 || Overt == 3) {result.r = true; result.c = player2;}
       //check horizontal/vertical deads
       if((Xhori>0 && Ohori>0) || deadH>0) globalDeadCount++;
       if((Xvert>0 && Overt>0) || deadV>0) globalDeadCount++;
@@ -286,11 +287,14 @@
       if(nextActive == -1){
         for(var i=0; i<9; i++) {
           board.children[i].obj.classList.remove('active');
+
           if(board.children[i].active) {
             board.children[i].obj.classList.add('active');
-            for(var j=0; j<9; j++) {
+            for(var j=0; j<9; j++) 
               board.children[i].children[j].setAttribute('onClick','placeLetter(this)');
-            }
+          } else {
+            for(var j=0; j<9; j++) 
+              board.children[i].children[j].setAttribute('onClick','');
           }
         }
       } else {//remove 'active' and deactivate click.
