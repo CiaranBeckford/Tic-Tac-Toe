@@ -285,17 +285,26 @@
       //get ready for user's move by making grids clickable and wait for user's click
       if(nextActive == -1){
         for(var i=0; i<9; i++) {
+          board.children[i].obj.classList.remove('active');
           if(board.children[i].active) {
+            board.children[i].obj.classList.add('active');
             for(var j=0; j<9; j++) {
               board.children[i].children[j].setAttribute('onClick','placeLetter(this)');
             }
           }
         }
-      } else {
-        for(var i=0; i<inners.length; i++)
-          inners[i].setAttribute('onClick','');
-        for(var i=0; i<9; i++)
+      } else {//remove 'active' and deactivate click.
+        for(var i=0; i<9; i++) {
+          outers[i].classList.remove('active');
+          for(var j=0; j<0; j++) {
+            inners[i*9+j].setAttribute('onClick','');
+          }
+        }
+        //add 'active' and activate click
+        outers[nextActive].classList.add('active');
+        for(var i=0; i<9; i++) {
           inners[nextActive*9+i].setAttribute('onClick','placeLetter(this)');
+        }
       }
     }
   }
@@ -376,6 +385,10 @@
 
   .deadO{
     background-color: #ceded6;
+  }
+
+  .active{
+    border:2px solid #222222 !important;
   }
 
   #gameboard2{
