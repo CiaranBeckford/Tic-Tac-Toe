@@ -13,9 +13,6 @@
   Team members: Ciaran Beckford & Rain Du
   */
 
-  var numGrid;
-  var numBigGrid = 9;
-
   //a 2D array of cells (elements), or a Board object
   var board;
 
@@ -124,7 +121,9 @@
         var tag = 'dead' + localWinner.letter;
         board.children[justActive].obj.classList.add(tag);
       }
-      //detect global win
+      var globalResult = detectWinGlobal();
+      gameOver = globalResult.r;
+      winner = globalResult.c;
     }
 
     if(gameOver) {
@@ -167,7 +166,7 @@
       }
     }
 
-    var result = new Coordinate(false, false);
+    var result = new Coordinate(false, '');
     deadCount = 0;//if a straight line contains both X and O, it's dead. No possible win there.
     var Xhori = 0; var Ohori = 0;
     var Xvert = 0; var Overt = 0;
@@ -211,6 +210,70 @@
       Xhori = 0; Ohori = 0; Xvert = 0; Overt = 0;
     }
     if(deadCount == 2 * 3 + 2) {result.r = true; result.c = 'draw';}
+    return result;
+  }
+
+
+  var globalDeadCount = 0;
+  var globalArr;//3 by 3 board to be detected
+  function detectWinGlobal() {
+    var tmp = board.children;
+    globalArr = new Array(3);
+    for(var i=0; i<3; i++) {
+      globalArr[i] = new Array(3);
+      for(var j=0; j<3; j++) {
+        globalArr[i][j] = tmp[i*3+j].obj;
+      }
+    }
+
+    var result = new Coordinate(false, '');
+    globalDeadCount = 0;//if a straight line contains both X and O, it's dead. No possible win there.
+    var Xhori = 0; var Ohori = 0; var deadH = 0;
+    var Xvert = 0; var Overt = 0; var deadV = 0;
+    var Xdiag1 = 0; var Odiag1 = 0; var deadD1 = 0;
+    var Xdiag2 = 0; var Odiag2 = 0; var deadD2 = 0;
+    for(var i=0; i<3; i++) 
+    {
+      //count diagonal 1 every loop
+      if(globalArr[i][i].classList.contains('deadX')) Xdiag1++;
+      else if(globalArr[i][i].classList.contains('deadO'))Odiag1++;
+      else if(globalArr[i][i].classList.contains('deadDraw')) deadD1++;
+      //count diagonal 2 every loop
+      if(globalArr[i][2-i].classList.contains('deadX')) Xdiag2++;
+      else if(globalArr[i][2-i].classList.contains('deadO')) Odiag2++;
+      else if(globalArr[i][2-i].classList.contains('deadDraw')) deadD2++;
+      if(i == 2)//last outer loop
+      {
+        //any diagonal win, after going through this outer loop check?
+        if(Xdiag1 == 3 || Xdiag2 == 3) {result.r = true; result.c = player1;}
+        else if(Odiag1 == 3 || Odiag2 == 3) {result.r = true; result.c = player2;}
+        //are the two diagonals dead by now?
+        if((Xdiag1>0 && Odiag1>0) || deadD1>0) globalDeadCount++;
+        if((Xdiag2>0 && Odiag2>0) || deadD2>0) globalDeadCount++;
+      }
+
+      //no? check for horizontal and vertical.
+      for (var j=0; j<3; j++) 
+      {
+        //horizontal
+        if(globalArr[i][j].classList.contains('deadX')) Xhori++;
+        else if(globalArr[i][j].classList.contains('deadO')) Ohori++;
+        else if(globalArr[i][j].classList.contains('deadDraw')) deadH++;
+        //vertical
+        if(globalArr[j][i].classList.contains('deadX')) Xvert++;
+        else if(globalArr[j][i].classList.contains('deadO')) Overt++;
+        else if(globalArr[j][i].classList.contains('deadDraw')) deadV++;
+      }
+      //any horizantal or vertical win, after running this inner loop?
+      if(Xhori == 3 || Xvert == 3) {result.r = true; result.c = currentPlayer;}
+      else if(Ohori == 3 || Overt == 3) {result.r = true; result.c = currentPlayer.opponent;}
+      //check horizontal/vertical deads
+      if((Xhori>0 && Ohori>0) || deadH>0) globalDeadCount++;
+      if((Xvert>0 && Overt>0) || deadV>0) globalDeadCount++;
+      //reset horizontal and vertical count variables
+      Xhori = 0; Ohori = 0; Xvert = 0; Overt = 0; deadH = 0; deadV = 0;
+    }
+    if(globalDeadCount == 2 * 3 + 2) {result.r = true; result.c = 'draw';}
     return result;
   }
 
@@ -304,7 +367,7 @@
   }
 
   .deadDraw{
-    background-color: #A2A2A2;
+    background-color: #CBCBCB;
   }
 
   .deadX{
