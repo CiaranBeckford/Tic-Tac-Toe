@@ -44,7 +44,8 @@
   //----meta-only variables----
   var inners;
   var outers;
-  var active = -1;
+  var justActive = -1;
+  var nextActive = -1;
 
 
   function onStart()
@@ -56,22 +57,6 @@
 
   function startUltimate() {
     console.log('----ULTIMATE GAME STARTS----');
-
-    var isMeta = true;
-    var p1 = document.inputForm.player1.value;
-    var symbol1 = document.inputForm.player1char.value;
-    var p2 = document.inputForm.player2.value;
-    var symbol2 = document.inputForm.player2char.value;
-    if(symbol1=='') symbol1='X';
-    if(symbol2=='') symbol2='O';
-    if(symbol1.length>1 || symbol2.length>1){
-      alert('Symbols can only be one character.');
-      return;
-    }
-    if(symbol1==symbol2){
-      alert('Two players\'s symbols cannot be the same.')
-      return;
-    }
 
     outers = document.getElementsByClassName('outer');
     inners = document.getElementsByClassName('inner');
@@ -86,8 +71,8 @@
 
     document.getElementById('winner-message').hidden = true;
     
-    player1 = new Player(p1,symbol1);
-    player2 = new Player(p2,symbol2);
+    player1 = new Player('X','X');
+    player2 = new Player('O','O');
     player1.opponent = player2;
     player2.opponent = player1;
 
@@ -99,6 +84,7 @@
   }
 
   function Board() {
+    this.active = true;
     this.obj;
     this.children = new Array(9);
     this.get = function(index) {
@@ -112,7 +98,8 @@
     if(gameOver || element.innerHTML != '') return;
     for(var i=0; i<inners.length; i++) {
       if(inners[i] == element) {
-        active = i - (Math.floor(i/9)*9);
+        justActive = Math.floor(i/9);
+        nextActive = i - (justActive*9);
         break;
       }
     }
@@ -128,7 +115,14 @@
 
   //called each time a letter is placed
   function updateGameStatus() {
-    winner = detectWin();
+    var result = detectWin();
+    var localGameOver = result.r;
+    var localWinner = result.c;
+
+    if(localGameOver) {
+      
+    }
+
     if(gameOver) {
       //end the game
       var msg = document.getElementById('winner-message');
@@ -152,99 +146,88 @@
   }
 
   /*
-  return the Player object of the winner.
-  return 'draw' if the whole board is filled but nobody wins or all routes are "dead".
-  Otherwise doesn't change or return anything.
+  return a Coordinate:
+  r: whether game is over on the local board
+  c: winner
   */
   var deadCount = 0;
+  var arr;//3 by 3 small board to be detected
   function detectWin() 
   {
+    var tmp = board.children[justActive].children;
+    arr = new Array(3);
+    for(var i=0; i<3; i++) {
+      arr[i] = new Array(3);
+      for(var j=0; j<3; j++) {
+        arr[i][j] = tmp[i*3+j];
+      }
+    }
+
+    var result = new Coordinate(false, false);
     deadCount = 0;//if a straight line contains both X and O, it's dead. No possible win there.
     var Xhori = 0; var Ohori = 0;
     var Xvert = 0; var Overt = 0;
     var Xdiag1 = 0; var Odiag1 = 0;
     var Xdiag2 = 0; var Odiag2 = 0;
-    for(var i=0; i<numGrid; i++) 
+    for(var i=0; i<3; i++) 
     {
       //count diagonal 1 every loop
-      if(board[i][i].innerHTML == currentPlayer.letter) Xdiag1++;
-      else if(board[i][i].innerHTML == currentPlayer.opponent.letter)Odiag1++;
+      if(arr[i][i].innerHTML == currentPlayer.letter) Xdiag1++;
+      else if(arr[i][i].innerHTML == currentPlayer.opponent.letter)Odiag1++;
       //count diagonal 2 every loop
-      if(board[i][numGrid-1-i].innerHTML == currentPlayer.letter) Xdiag2++;
-      else if(board[i][numGrid-i-1].innerHTML == currentPlayer.opponent.letter)Odiag2++;
-      if(i == numGrid-1)//last outer loop
+      if(arr[i][2-i].innerHTML == currentPlayer.letter) Xdiag2++;
+      else if(arr[i][2-i].innerHTML == currentPlayer.opponent.letter)Odiag2++;
+      if(i == 2)//last outer loop
       {
         //any diagonal win, after going through this outer loop check?
-        if(Xdiag1 == numGrid || Xdiag2 == numGrid) {gameOver = true; return currentPlayer;}
-        else if(Odiag1 == numGrid || Odiag2 == numGrid) {gameOver = true; return currentPlayer.opponent;}
+        if(Xdiag1 == 3 || Xdiag2 == 3) {result.r = true; result.c = currentPlayer;}
+        else if(Odiag1 == 3 || Odiag2 == 3) {result.r = true; result.c = currentPlayer.opponent;}
         //are the two diagonals dead by now?
         if(Xdiag1>0 && Odiag1>0) deadCount++;
         if(Xdiag2>0 && Odiag2>0) deadCount++;
       }
 
       //no? check for horizontal and vertical.
-      for (var j=0; j<numGrid; j++) 
+      for (var j=0; j<3; j++) 
       {
         //horizontal
-        if(board[i][j].innerHTML == currentPlayer.letter) Xhori++;
-        else if(board[i][j].innerHTML == currentPlayer.opponent.letter)Ohori++;
+        if(arr[i][j].innerHTML == currentPlayer.letter) Xhori++;
+        else if(arr[i][j].innerHTML == currentPlayer.opponent.letter)Ohori++;
         //vertical
-        if(board[j][i].innerHTML == currentPlayer.letter) Xvert++;
-        else if(board[j][i].innerHTML == currentPlayer.opponent.letter)Overt++;
+        if(arr[j][i].innerHTML == currentPlayer.letter) Xvert++;
+        else if(arr[j][i].innerHTML == currentPlayer.opponent.letter)Overt++;
       }
       //any horizantal or vertical win, after running this inner loop?
-      if(Xhori == numGrid || Xvert == numGrid) {gameOver = true; return currentPlayer;}
-      else if(Ohori == numGrid || Overt == numGrid) {gameOver = true; return currentPlayer.opponent;}
+      if(Xhori == 3 || Xvert == 3) {result.r = true; result.c = currentPlayer;}
+      else if(Ohori == 3 || Overt == 3) {result.r = true; result.c = currentPlayer.opponent;}
       //check horizontal/vertical deads
       if(Xhori>0 && Ohori>0) deadCount++;
       if(Xvert>0 && Overt>0) deadCount++;
       //reset horizontal and vertical count variables
       Xhori = 0; Ohori = 0; Xvert = 0; Overt = 0;
     }
-    if(deadCount == 2 * numGrid + 2) {gameOver = true; return 'draw';}
+    if(deadCount == 2 * 3 + 2) {result.r = true; result.c = 'draw';}
+    return result;
   }
 
   function Player(name, letter) {
     this.name = name;
     this.letter = letter;
     this.opponent;
-
-    if(!isMeta && name == 'random') this.move = function(){computerMove(randomCoord);};
-    else if(!isMeta && name == 'tester') this.move = function(){computerMove(AI1);};
-    else if(!isMeta && name == 'AI') this.move = function(){computerMove(AI6);};
-    else
-    {
-      this.move = function() {
-        //get ready for user's move by making grids clickable and wait for user's click
-        if(active == -1){
-          for(var i=0; i<inners.length; i++)
-            inners[i].setAttribute('onClick','placeLetter(this)');
-        } else {
-          for(var i=0; i<inners.length; i++)
-            inners[i].setAttribute('onClick','');
-          for(var i=0; i<9; i++)
-            inners[active*9+i].setAttribute('onClick','placeLetter(this)');
-        }
+    this.move = function() {
+      //get ready for user's move by making grids clickable and wait for user's click
+      if(nextActive == -1){
+        for(var i=0; i<inners.length; i++)
+          inners[i].setAttribute('onClick','placeLetter(this)');
+      } else {
+        for(var i=0; i<inners.length; i++)
+          inners[i].setAttribute('onClick','');
+        for(var i=0; i<9; i++)
+          inners[nextActive*9+i].setAttribute('onClick','placeLetter(this)');
       }
     }
   }
   
-  function computerMove(algorithm) {
-    //make grids unclickable. 
-    for(var i=0; i<numGrid; i++) {
-      for(var j=0; j<numGrid; j++) {
-        board[i][j].setAttribute('onClick','');
-      }
-    }
-    //let AI simulate a click.
-    var coord = algorithm();
-    console.log(currentPlayer.letter + ': ' + coord.r + ',' + coord.c);
-    if(board[coord.r][coord.c].innerHTML != '') console.log('error: placed at somewhere occupied');
-    setTimeout(function(){
-      placeLetter(board[coord.r][coord.c]);
-    },400);
-  }
-
   function Coordinate(r, c) {
     this.r = r;
     this.c = c;
@@ -348,16 +331,9 @@
 </head>
 <body>
   <div id="container" class="container">
-    <h1 class="title">Tic Tac Toe</h1>
-    <p class="sm center">(Computer users list: random, tester, AI)</p>
+    <h1 class="title">Meta Tic Tac Toe</h1>
     <form name="inputForm" >
-      Player 1 <input type="text" size=8 name="player1">
-       plays with this symbol (a char, default 'X'): <input type="text" size=1 name="player1char">,
-       and player 2 <input type="text" size=8 name="player2">
-       plays with this (a char, default 'O'): <input type="text" size=1 name="player2char">.<br>
-      <p class="center"><input type="text" size=1 name="size"> (default: 3) grids per row.</p>
       <p class="msg"><span id="start" class="msg" onclick="onStart()">Start!</span></p>
-      <p> <input type="checkbox" name="checkb"> Check for meta tic-tac-toe; Leave unchecked for normal tic-tac-toe</p> 
     </form>      
     <div id="gameboard2" class="container-fluid" hidden>
       <div class="row">
