@@ -9,15 +9,9 @@
 <script type="text/javascript">
 
   /*
-  Tic Tac Toe
-  Project group members: Ciaran Beckford & Rain Du
-  
-  Enter players' names (optional) and each person's symbol (default X and O), then start the game.
-  If any player is called "random", "tester" or "AI",
-  that player is played by the corresponding computer player.
+  Meta Tic Tac Toe
+  Team members: Ciaran Beckford & Rain Du
   */
-
-  var isMeta = false;//meta tic tac toe?
 
   var numGrid;
   var numBigGrid = 9;
@@ -100,6 +94,8 @@
       if(inners[i] == element) {
         justActive = Math.floor(i/9);
         nextActive = i - (justActive*9);
+        if(board.children[nextActive].obj.classList.contains('dead'))
+          nextActive = -1;
         break;
       }
     }
@@ -120,7 +116,15 @@
     var localWinner = result.c;
 
     if(localGameOver) {
-      
+      board.children[justActive].active = false;
+      board.children[justActive].obj.classList.add('dead');
+      if(result.c=='draw') {
+        board.children[justActive].obj.classList.add('deadDraw');
+      } else {
+        var tag = 'dead' + localWinner.letter;
+        board.children[justActive].obj.classList.add(tag);
+      }
+      //detect global win
     }
 
     if(gameOver) {
@@ -217,8 +221,13 @@
     this.move = function() {
       //get ready for user's move by making grids clickable and wait for user's click
       if(nextActive == -1){
-        for(var i=0; i<inners.length; i++)
-          inners[i].setAttribute('onClick','placeLetter(this)');
+        for(var i=0; i<9; i++) {
+          if(board.children[i].active) {
+            for(var j=0; j<9; j++) {
+              board.children[i].children[j].setAttribute('onClick','placeLetter(this)');
+            }
+          }
+        }
       } else {
         for(var i=0; i<inners.length; i++)
           inners[i].setAttribute('onClick','');
@@ -281,7 +290,7 @@
 
   .X,.O{
     font-size:54px;
-    line-height:100px;/* 1/9 of total board size */
+    line-height:75px;/* 1/9 of total board size */
     text-align:center;
     vertical-align:middle;
   }
@@ -294,9 +303,21 @@
     color:#699E82;
   }
 
+  .deadDraw{
+    background-color: #A2A2A2;
+  }
+
+  .deadX{
+    background-color: #f6d7ce;
+  }
+
+  .deadO{
+    background-color: #ceded6;
+  }
+
   #gameboard2{
-    width:900px;
-    height:900px;
+    width:750px;
+    height:750px;
     margin:0.8em auto;
   }
   input{
@@ -337,7 +358,7 @@
     </form>      
     <div id="gameboard2" class="container-fluid" hidden>
       <div class="row">
-        <div class="cell col-xs-4">
+        <div class="outer cell col-xs-4">
           <div class="row" id="row01">
             <div class="inner cell col-xs-4" onclick="red()" id="cell01"></div>
             <div class="inner cell col-xs-4"></div>
@@ -355,7 +376,7 @@
           </div>
         </div>
 
-        <div class="cell col-xs-4">
+        <div class="outer cell col-xs-4">
           <div class="row">
             <div class="inner cell col-xs-4"></div>
             <div class="inner cell col-xs-4"></div>
@@ -373,64 +394,7 @@
           </div>
         </div>
 
-        <div class="cell col-xs-4">
-          <div class="row">
-            <div class="inner cell col-xs-4"></div>
-            <div class="inner cell col-xs-4"></div>
-            <div class="inner cell col-xs-4"></div>
-          </div>
-          <div class="row">
-            <div class="inner cell col-xs-4"></div>
-            <div class="inner cell col-xs-4"></div>
-            <div class="inner cell col-xs-4"></div>
-          </div>
-          <div class="row">
-            <div class="inner cell col-xs-4"></div>
-            <div class="inner cell col-xs-4"></div>
-            <div class="inner cell col-xs-4"></div>
-          </div>
-        </div>
-
-      </div>
-      <div class="row">
-
-        <div class="cell col-xs-4">
-          <div class="row">
-            <div class="inner cell col-xs-4"></div>
-            <div class="inner cell col-xs-4"></div>
-            <div class="inner cell col-xs-4"></div>
-          </div>
-          <div class="row">
-            <div class="inner cell col-xs-4"></div>
-            <div class="inner cell col-xs-4"></div>
-            <div class="inner cell col-xs-4"></div>
-          </div>
-          <div class="row">
-            <div class="inner cell col-xs-4"></div>
-            <div class="inner cell col-xs-4"></div>
-            <div class="inner cell col-xs-4"></div>
-          </div>
-        </div>
-
-        <div class="cell col-xs-4">
-          <div class="row">
-            <div class="inner cell col-xs-4"></div>
-            <div class="inner cell col-xs-4"></div>
-            <div class="inner cell col-xs-4"></div>
-          </div>
-          <div class="row">
-            <div class="inner cell col-xs-4"></div>
-            <div class="inner cell col-xs-4"></div>
-            <div class="inner cell col-xs-4"></div>
-          </div>
-          <div class="row">
-            <div class="inner cell col-xs-4"></div>
-            <div class="inner cell col-xs-4"></div>
-            <div class="inner cell col-xs-4"></div>
-          </div>
-        </div>
-
-        <div class="cell col-xs-4">
+        <div class="outer cell col-xs-4">
           <div class="row">
             <div class="inner cell col-xs-4"></div>
             <div class="inner cell col-xs-4"></div>
@@ -451,7 +415,7 @@
       </div>
       <div class="row">
 
-        <div class="cell col-xs-4">
+        <div class="outer cell col-xs-4">
           <div class="row">
             <div class="inner cell col-xs-4"></div>
             <div class="inner cell col-xs-4"></div>
@@ -469,7 +433,7 @@
           </div>
         </div>
 
-        <div class="cell col-xs-4">
+        <div class="outer cell col-xs-4">
           <div class="row">
             <div class="inner cell col-xs-4"></div>
             <div class="inner cell col-xs-4"></div>
@@ -487,7 +451,64 @@
           </div>
         </div>
 
-        <div class="cell col-xs-4">
+        <div class="outer cell col-xs-4">
+          <div class="row">
+            <div class="inner cell col-xs-4"></div>
+            <div class="inner cell col-xs-4"></div>
+            <div class="inner cell col-xs-4"></div>
+          </div>
+          <div class="row">
+            <div class="inner cell col-xs-4"></div>
+            <div class="inner cell col-xs-4"></div>
+            <div class="inner cell col-xs-4"></div>
+          </div>
+          <div class="row">
+            <div class="inner cell col-xs-4"></div>
+            <div class="inner cell col-xs-4"></div>
+            <div class="inner cell col-xs-4"></div>
+          </div>
+        </div>
+
+      </div>
+      <div class="row">
+
+        <div class="outer cell col-xs-4">
+          <div class="row">
+            <div class="inner cell col-xs-4"></div>
+            <div class="inner cell col-xs-4"></div>
+            <div class="inner cell col-xs-4"></div>
+          </div>
+          <div class="row">
+            <div class="inner cell col-xs-4"></div>
+            <div class="inner cell col-xs-4"></div>
+            <div class="inner cell col-xs-4"></div>
+          </div>
+          <div class="row">
+            <div class="inner cell col-xs-4"></div>
+            <div class="inner cell col-xs-4"></div>
+            <div class="inner cell col-xs-4"></div>
+          </div>
+        </div>
+
+        <div class="outer cell col-xs-4">
+          <div class="row">
+            <div class="inner cell col-xs-4"></div>
+            <div class="inner cell col-xs-4"></div>
+            <div class="inner cell col-xs-4"></div>
+          </div>
+          <div class="row">
+            <div class="inner cell col-xs-4"></div>
+            <div class="inner cell col-xs-4"></div>
+            <div class="inner cell col-xs-4"></div>
+          </div>
+          <div class="row">
+            <div class="inner cell col-xs-4"></div>
+            <div class="inner cell col-xs-4"></div>
+            <div class="inner cell col-xs-4"></div>
+          </div>
+        </div>
+
+        <div class="outer cell col-xs-4">
           <div class="row">
             <div class="inner cell col-xs-4"></div>
             <div class="inner cell col-xs-4"></div>
