@@ -51,6 +51,7 @@
 
     outers = document.getElementsByClassName('outer');
     inners = document.getElementsByClassName('inner');
+
     board = new Board();
     for(var i=0; i<9; i++) {
       board.children[i] = new Board()
@@ -59,6 +60,22 @@
         board.children[i].children[j] = inners[i*9+j];
       }
     }
+
+    for(var i=0; i<9; i++) {
+      outers[i].classList.remove('active');
+      outers[i].classList.remove('dead');
+      outers[i].classList.remove('deadX');
+      outers[i].classList.remove('deadO');
+      board.children[i].active = true;
+      for(var j=0; j<9; j++) {
+        board.children[i].children[j].classList.remove('X');
+        board.children[i].children[j].classList.remove('O');
+        board.children[i].children[j].innerHTML = '';
+      }
+    }
+
+    justActive = -1;
+    nextActive = -1;
 
     document.getElementById('winner-message').hidden = true;
     
