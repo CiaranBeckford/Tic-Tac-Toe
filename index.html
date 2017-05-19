@@ -164,8 +164,9 @@
   }
 
   /*
-  return 'X' if X wins, or return 'O' if O wins. 
+  return the Player object of the winner if someone wins.
   return 'draw' if the whole board is filled but nobody wins.
+  In both cases gameOver becomes true.
   Otherwise doesn't change or return anything.
   */
   var deadCount = 0;
@@ -220,14 +221,12 @@
     this.name = name;
     this.letter = letter;
     this.opponent;
-    this.isHuman = false;
 
     if(name == 'random') this.move = function(){computerMove(randomCoord);};
     else if(name == 'tester') this.move = function(){computerMove(AI1);};
     else if(name == 'AI') this.move = function(){computerMove(AI6);};
     else
     {
-      this.isHuman = true;
       this.move = function() {
         //get ready for user's move by making grids clickable and wait for user's click
         for(var i=0; i<numGrid; i++) {
@@ -363,7 +362,7 @@
       and player 2 <input type="text" size=8 name="player2">
        plays with this (a char, default 'O'): <input type="text" size=1 name="player2char">.<br>
       <p class="center"><input type="text" size=1 name="size"> (default: 3) grids per row.</p>
-      <p class="center"> <a href="meta-tic-tac-toe/index.html">Click here to play Ultimate Tic-Tac-Toe instead</a></p> 
+      <p class="center"> <a href="meta-tic-tac-toe/index_meta_only.html">Click here to play Ultimate Tic-Tac-Toe instead</a></p> 
       <p class="msg"><span id="start" class="msg" onclick="startGame()">Start!</span></p>
     </form>
     <div id="gameBoard" class="container-fluid" hidden></div>

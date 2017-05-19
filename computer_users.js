@@ -86,7 +86,7 @@ function emergency_win()
 /*
 Second half of AI1 core, also a helper for AI4 and onward
 if it's one step away from losing, it blocks its opponent
-Judge based on class name not innerHTML, can be used for simulations
+Judge based on class name not innerHTML, can be used for simulated moves.
 */
 function emergency_lose()
 {
