@@ -139,11 +139,18 @@
 
   //onclick function from user, or simulated by an AI
   function placeLetter(element) {
-    if(gameOver || element.innerHTML != '') return;
+    if(gameOver || element.innerHTML != '') return false;
 
+    var row; var col;
+    for(var i=0; i<numGrid; i++){
+      for(var j=0; j<numGrid; j++) {
+        if(board[i][j]==element){
+          row=i; col=j;
+        }
+      }
+    }
     var tmp;
-    if(currentPlayer==player1) tmp = 'X'; else tmp = 'O';
-    doHttpGet('/taketurn?player='+tmp);
+    doHttpGet('/taketurn?row='+row+'&col='+col);
 
     element.classList.add(currentPlayer.letter);
     if(currentPlayer == startingPlayer){
@@ -153,6 +160,7 @@
       element.classList.add('O');
     element.innerHTML = currentPlayer.letter;
     updateGameStatus();
+    return true;
   }
 
   //called each time a letter is placed
@@ -245,7 +253,7 @@
     if(name == 'random') this.move = function(){computerMove(randomCoord);};
     else if(name == 'tester') this.move = function(){computerMove(AI1);};
     else if(name == 'AI') this.move = function(){computerMove(AI6);};
-    else if(name == 'remote') this.move = function(){remoteMove(randomCoord);};
+    else if(name == 'remote') this.move = function(){remoteMove();};
     else
     {
       this.move = function() {
@@ -259,7 +267,7 @@
   }
 
   //player NOT on this computer!!! Gets the coordinates from the server.
-  function remoteMove(algorithm) {
+  function remoteMove() {
     //make grids unclickable. 
     for(var i=0; i<numGrid; i++) {
       for(var j=0; j<numGrid; j++) {
@@ -268,11 +276,13 @@
     }
 
     var place = function(message){
+      console.log('\'place\' runs.')
       var arr = message.split(',');
       var row = parseInt(arr[0]); var col = parseInt(arr[1]);
-      placeLetter(board[row][col]);
+      var success = placeLetter(board[row][col]);
+      if(!success) doHttpGet('/awaitturn',place);
     }
-    doHttpGet('/awaitturn?player=X',place);
+    doHttpGet('/awaitturn',place);
 
   }
   
@@ -394,7 +404,7 @@
 <body>
   <div id="container" class="container">
     <h1 class="title">Tic Tac Toe</h1>
-    <p class="sm center">(Computer users list: random, tester, AI)</p>
+    <p class="sm center">(Computer users list: "random", "tester", "AI". To play against a remote player, put "remote" as the opponent's name.)</p>
     <form name="inputForm">
       Player 1 <input type="text" size=8 name="player1">
        plays with this symbol (a char, default 'X'): <input type="text" size=1 name="player1char">,<br>

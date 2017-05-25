@@ -2,7 +2,6 @@ var fs = require('fs');
 var http = require('http');
 var url = require('url');
 
-var turn = 'X';
 var notify = null;
 
 function clientRequest(request, response) {
@@ -18,31 +17,16 @@ function clientRequest(request, response) {
 
 	var content = '404: Not found';
 	if(path === 'taketurn') {
-		var player = args.player;
-		//console.log('Player: ' + player);
-		if(player === turn) {
-			if(player === 'X') {
-				turn = 'O';
-			} else {
-				turn = 'X';
-			}
-
-			if(notify !== null) {
-				var row = args.row;
-				var col = args.col;
-				var res = row + ',' + col;
-				notify(res);
-				notify = null;
-			}
-
-			content = String(true);
-		} else {
-			content = String(false);
+		if(notify !== null) {
+			var row = args.row;
+			var col = args.col;
+			var res = row + ',' + col;
+			notify(res);
+			notify = null;
 		}
-	} else if(path === 'whoseturn') {
-		content = turn;
+		content = String(true);
 	} else if(path === 'awaitturn') {
-		var player = args.player;
+		//var player = args.player;
 		notify = function(res) {
 			response.end(res);
 		}
