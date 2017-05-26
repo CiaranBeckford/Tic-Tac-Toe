@@ -53,6 +53,21 @@
     connection.send();
   }
 
+  function attemptEnterGame() {
+    var handler = function(msg){
+      if(msg=='false') {
+        gameOver = true;
+        var box = document.getElementById('winner-message');
+        box.innerHTML='There\'re already two players playing.';
+        box.hidden = false;
+      }
+      else {
+        startGame();
+      }
+    }
+    doHttpGet('/attemptenter',handler);
+  }
+
   //start!
   function startGame() {
     console.log('----GAME STARTS----');
@@ -79,6 +94,7 @@
     }
 
     document.getElementById('winner-message').hidden = true;
+    
     board = new Array(numGrid);
     map2 = new Array(numGrid);
     for(var i=0; i<numGrid; i++){
@@ -93,10 +109,33 @@
 
     startingPlayer = player1;
     currentPlayer = startingPlayer;
-    generateCells();
-    gameOver = false;
-    winner = '';
-    currentPlayer.move();
+
+    //check with server about filled info
+    var str = '?p1='+player1.name+'&p2='+player2.name+'&size='+numGrid;
+    var tmp = function(msg){
+      if(msg=='false'){
+        var x = document.getElementById('winner-message');
+        x.innerHTML = 'Conflicting info about the game :/ Talk to your opponent and fill out the form again.'
+        x.hidden = false;
+      }
+      else {
+        var start = document.getElementById('start');
+        start.innerHTML = 'refresh';
+        start.setAttribute('onClick','refresh();');
+        generateCells();
+        gameOver = false;
+        winner = '';
+        currentPlayer.move();
+      }
+    }
+    doHttpGet('/enter'+str,tmp)
+  }
+
+  function refresh() {
+    var handler = function(){
+      window.location.href = '/';
+    }
+    doHttpGet('/clear', handler);//why???
   }
   
 
@@ -141,25 +180,54 @@
   function placeLetter(element) {
     if(gameOver || element.innerHTML != '') return false;
 
+    var prevGameState = '';
     var row; var col;
     for(var i=0; i<numGrid; i++){
       for(var j=0; j<numGrid; j++) {
+        //generate game state before making move
+        if(board[i][j].innerHTML==player1.letter)
+          prevGameState += '1';
+        else if(board[i][j].innerHTML==player2.letter)
+          prevGameState += '2';
+        else prevGameState += '0';
+        //get this move's coord
         if(board[i][j]==element){
           row=i; col=j;
         }
       }
     }
-    var tmp;
-    doHttpGet('/taketurn?row='+row+'&col='+col);
 
-    element.classList.add(currentPlayer.letter);
-    if(currentPlayer == startingPlayer){
-      element.classList.add('X');
+    var ifSyncedCheck = function(response){
+      if(response==='true' || currentPlayer.name == 'remote') {
+        element.classList.add(currentPlayer.letter);
+        if(currentPlayer == startingPlayer){
+          element.classList.add('X');
+        }
+        else
+          element.classList.add('O');
+        element.innerHTML = currentPlayer.letter;
+        //update game status in server
+        var newGameState = '';
+        for(var i=0; i<numGrid; i++){
+          for(var j=0; j<numGrid; j++) {
+            //generate game state after making move
+            if(board[i][j].innerHTML==player1.letter)
+              newGameState += '1';
+            else if(board[i][j].innerHTML==player2.letter)
+              newGameState += '2';
+            else newGameState += '0';
+          }
+        }
+        doHttpGet('/taketurn?row='+row+'&col='+col+'&newGameState='+newGameState);
+        updateGameStatus();
+      }
+      else 
+      {
+        console.log('out of sync.');
+        gameOver = true;
+      }
     }
-    else
-      element.classList.add('O');
-    element.innerHTML = currentPlayer.letter;
-    updateGameStatus();
+    doHttpGet('/gamestate?prevGameState='+prevGameState, ifSyncedCheck);
     return true;
   }
 
@@ -168,6 +236,7 @@
     winner = detectWin();
     if(gameOver) {
       //end the game
+      doHttpGet('/clear');
       var msg = document.getElementById('winner-message');
       if(winner == 'draw')
         msg.innerHTML = 'Draw!'
@@ -276,7 +345,6 @@
     }
 
     var place = function(message){
-      console.log('\'place\' runs.')
       var arr = message.split(',');
       var row = parseInt(arr[0]); var col = parseInt(arr[1]);
       var success = placeLetter(board[row][col]);
@@ -411,8 +479,7 @@
       and player 2 <input type="text" size=8 name="player2">
        plays with this (a char, default 'O'): <input type="text" size=1 name="player2char">.<br>
       <p class="center"><input type="text" size=1 name="size"> (default: 3) grids per row.</p>
-      <p class="center"> <a href="meta-tic-tac-toe/index_meta_only.html">Click here to play Ultimate Tic-Tac-Toe instead</a></p> 
-      <p class="msg"><span id="start" class="msg" onclick="startGame()">Start!</span></p>
+      <p class="msg"><span id="start" class="msg" onclick="attemptEnterGame()">Start!</span></p>
     </form>
     <div id="gameBoard" class="container-fluid" hidden></div>
     <p class="msg" id="winner-message" hidden></p>
