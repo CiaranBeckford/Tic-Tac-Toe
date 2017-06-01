@@ -9,12 +9,17 @@
 <script type="text/javascript">
 
   /*
-  Tic Tac Toe
+  Tic Tac Toe (Multiplayer version)
   Project group members: Ciaran Beckford & Rain Du
   
   Enter players' names (optional) and each person's symbol (default X and O), then start the game.
   If any player is called "random", "tester" or "AI",
   that player is played by the corresponding computer player.
+  If playing against a remote player, put "remote" as the remote player's name.
+
+  TIPs:
+  DO NOT USE THE BROWSER REFRESH BUTTON. Use 'Refresh' Button in HTML instead. If that button does not exist, you don't need to refresh. Just fill in the blanks again. If you want to close the window, click on "Exit" before you do so.
+  If you're going first, make sure your opponent joins the game before you make the first move. Or your opponent will not be able to join.
   */
 
   var numGrid;
@@ -29,48 +34,60 @@
   */
   var map2;
 
-  var gameOver;
+  var gameOver = true;
   var winner;
 
   var player1;
   var player2;
+  var remote = false;
 
   var startingPlayer;
   var currentPlayer;
 
-
+  var connection;
+  var isRefresh = false;
   function doHttpGet(url, handler) {
-    var connection = new XMLHttpRequest();
+     connection = new XMLHttpRequest();
     var myHandler = function() {
-      if(connection.readyState === XMLHttpRequest.DONE) {
+      if(connection.readyState === 4 && !isRefresh) {
         handler(connection.responseText);
       }
+      isRefresh = false;
     }
     if(handler !== undefined) {
       connection.onreadystatechange = myHandler;
     }
     connection.open('GET', url);
+    connection.timeout = 30000;
+    connection.ontimeout = function() {
+      console.log('No response from the opponent :/');
+      connection.abort();
+    }
     connection.send();
   }
 
+  //game starts from here (either local or remote)
   function attemptEnterGame() {
-    var handler = function(msg){
-      if(msg=='false') {
-        gameOver = true;
-        var box = document.getElementById('winner-message');
-        box.innerHTML='There\'re already two players playing.';
-        box.hidden = false;
+    initializeVars();
+    if(remote){
+      var playerCountCheck = function(msg){
+        if(msg=='false') {
+          gameOver = true;
+          var box = document.getElementById('winner-message');
+          box.innerHTML='There\'s already a game going on.';
+          box.hidden = false;
+        }
+        else {
+          startRemote();
+        }
       }
-      else {
-        startGame();
-      }
+      doHttpGet('/attemptenter',playerCountCheck);
     }
-    doHttpGet('/attemptenter',handler);
+    else
+      startLocal();
   }
 
-  //start!
-  function startGame() {
-    console.log('----GAME STARTS----');
+  function initializeVars(){
     var size = parseInt(document.inputForm.size.value);
     if(isNaN(size)) numGrid = 3;
     else if(size < 1) {
@@ -106,39 +123,63 @@
     player2 = new Player(p2,symbol2);
     player1.opponent = player2;
     player2.opponent = player1;
+    if(player1.name=='remote'||player2.name=='remote') remote = true;
+    else remote = false;
 
     startingPlayer = player1;
     currentPlayer = startingPlayer;
 
+    var start = document.getElementById('start');
+    start.innerHTML = 'refresh';
+    start.setAttribute('onClick','refresh();');
+    winner = '';
+  }
+
+  function startRemote() {
     //check with server about filled info
     var str = '?p1='+player1.name+'&p2='+player2.name+'&size='+numGrid;
-    var tmp = function(msg){
+    var enter = function(msg){
       if(msg=='false'){
         var x = document.getElementById('winner-message');
         x.innerHTML = 'Conflicting info about the game :/ Talk to your opponent and fill out the form again.'
         x.hidden = false;
       }
       else {
-        var start = document.getElementById('start');
-        start.innerHTML = 'refresh';
-        start.setAttribute('onClick','refresh();');
-        generateCells();
-        gameOver = false;
-        winner = '';
-        currentPlayer.move();
+        startLocal();
       }
     }
-    doHttpGet('/enter'+str,tmp)
+    doHttpGet('/enter'+str,enter)
+  }
+
+  function startLocal(){
+    console.log('----GAME STARTS----');
+    generateCells();
+    gameOver = false;
+    currentPlayer.move();
   }
 
   function refresh() {
-    var handler = function(){
-      window.location.href = '/';
+    if(remote && !gameOver){
+      isRefresh = true;
+      connection.abort();
+      exitGame();
     }
-    doHttpGet('/clear', handler);//why???
+   location.reload(true);
+  }
+
+  function beforeCloseWindow(){
+    if(connection!=undefined)connection.abort();
+    if(!gameOver) exitGame();
+    console.log('Ready to close.');
+  }
+
+  function exitGame() {
+    console.log('A player trying to exit game.');
+    if(gameOver) console.log('Err: not in game');
+    var str = '?p1='+player1.name+'&p2='+player2.name;
+    doHttpGet('/exit'+str);
   }
   
-
   /*
   Evenly divides #gameBoard into numGrid rows and numGrid columns of cells
   And store them into board for later access
@@ -179,7 +220,13 @@
   //onclick function from user, or simulated by an AI
   function placeLetter(element) {
     if(gameOver || element.innerHTML != '') return false;
-
+    //a local game
+    if(!remote) {
+      continuePlaceLetter(element);
+      updateGameStatus();
+      return true;
+    }
+    //a game that involves a remote player
     var prevGameState = '';
     var row; var col;
     for(var i=0; i<numGrid; i++){
@@ -198,14 +245,8 @@
     }
 
     var ifSyncedCheck = function(response){
-      if(response==='true' || currentPlayer.name == 'remote') {
-        element.classList.add(currentPlayer.letter);
-        if(currentPlayer == startingPlayer){
-          element.classList.add('X');
-        }
-        else
-          element.classList.add('O');
-        element.innerHTML = currentPlayer.letter;
+      if(response=='true' || currentPlayer.name=='remote') {
+        continuePlaceLetter(element);
         //update game status in server
         var newGameState = '';
         for(var i=0; i<numGrid; i++){
@@ -221,14 +262,26 @@
         doHttpGet('/taketurn?row='+row+'&col='+col+'&newGameState='+newGameState);
         updateGameStatus();
       }
-      else 
+      else
       {
-        console.log('out of sync.');
+        console.log('Err: out of sync.');
+        exitGame();
         gameOver = true;
       }
     }
+
     doHttpGet('/gamestate?prevGameState='+prevGameState, ifSyncedCheck);
     return true;
+  }
+
+  function continuePlaceLetter(element) {
+    element.classList.add(currentPlayer.letter);
+    if(currentPlayer == startingPlayer){
+      element.classList.add('X');
+    }
+    else
+      element.classList.add('O');
+    element.innerHTML = currentPlayer.letter;
   }
 
   //called each time a letter is placed
@@ -236,7 +289,8 @@
     winner = detectWin();
     if(gameOver) {
       //end the game
-      doHttpGet('/clear');
+      if(remote) doHttpGet('/clear');
+      remote = false;
       var msg = document.getElementById('winner-message');
       if(winner == 'draw')
         msg.innerHTML = 'Draw!'
@@ -345,13 +399,20 @@
     }
 
     var place = function(message){
-      var arr = message.split(',');
-      var row = parseInt(arr[0]); var col = parseInt(arr[1]);
-      var success = placeLetter(board[row][col]);
-      if(!success) doHttpGet('/awaitturn',place);
+      if(message=='false' || message=='') {
+        exitGame();//有时候退不出去？？
+        gameOver = true;
+        var tmp = document.getElementById('winner-message');
+        tmp.innerHTML='You don\'t have an opponent playing.'
+        tmp.hidden = false;
+      } else {
+        var arr = message.split(',');
+        var row = parseInt(arr[0]); var col = parseInt(arr[1]);
+        var success = placeLetter(board[row][col]);
+        if(!success) doHttpGet('/awaitturn',place);
+      }
     }
     doHttpGet('/awaitturn',place);
-
   }
   
   function computerMove(algorithm) {
@@ -444,7 +505,7 @@
     border:0 solid #706764;
     border-bottom-width:1px;
   }
-  #start:hover{
+  #start:hover, #close:hover{
     text-decoration:underline;
   }
   .title{
@@ -472,14 +533,17 @@
 <body>
   <div id="container" class="container">
     <h1 class="title">Tic Tac Toe</h1>
-    <p class="sm center">(Computer users list: "random", "tester", "AI". To play against a remote player, put "remote" as the opponent's name.)</p>
+    <p class="sm">Tips: <br>1) DO NOT USE THE BROWSER REFRESH BUTTON. Use 'Refresh' Button in HTML instead. If that button does not exist, you don't need to refresh. Just fill in the blanks again. <br>2) If you want to close the window, click on "Exit" before you do so. <br>3) If you're going first, make sure your opponent joins the game before you make the first move. Or your opponent will not be able to join. <br>Computer users list: "random", "tester", "AI". To play against a remote player, put "remote" as the opponent's name. </p>
     <form name="inputForm">
       Player 1 <input type="text" size=8 name="player1">
        plays with this symbol (a char, default 'X'): <input type="text" size=1 name="player1char">,<br>
       and player 2 <input type="text" size=8 name="player2">
        plays with this (a char, default 'O'): <input type="text" size=1 name="player2char">.<br>
       <p class="center"><input type="text" size=1 name="size"> (default: 3) grids per row.</p>
-      <p class="msg"><span id="start" class="msg" onclick="attemptEnterGame()">Start!</span></p>
+      <p class="msg">
+        <span id="start" class="msg" onclick="attemptEnterGame()">Start</span> 
+        <span id="close" class="msg" onclick="beforeCloseWindow()">Exit</span>
+      </p>
     </form>
     <div id="gameBoard" class="container-fluid" hidden></div>
     <p class="msg" id="winner-message" hidden></p>
